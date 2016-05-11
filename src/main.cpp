@@ -128,6 +128,7 @@ void mainloop(GLFWwindow* win, gl::Program& p) {
 
         int w, h;
         glfwGetFramebufferSize(win, &w, &h);
+        glViewport(0, 0, w, h);
 
         double time = glfwGetTime();
 	while(!glfwWindowShouldClose(win)) {
