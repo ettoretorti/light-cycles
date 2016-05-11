@@ -5,6 +5,15 @@
 
 namespace gl {
 
+//opengl state shadowing for performance
+static thread_local GLuint curVAO = 0;
+static void vaoBind(GLuint name) {
+	if(curVAO != name) {
+		glBindVertexArray(name);
+		curVAO = name;
+	}
+}
+
 VArray::VArray() : name_(0)
 {
 	glGenVertexArrays(1, &name_);
@@ -25,22 +34,22 @@ VArray::~VArray() {
 }
 
 void VArray::bind() const {
-	glBindVertexArray(name_);
+	vaoBind(name_);
 }
 
 void VArray::enableVertexAttrib(GLuint index) {
-	bind();
+	vaoBind(name_);
 	glEnableVertexAttribArray(index);
 }
 
 void VArray::disableVertexAttrib(GLuint index) {
-	bind();
+	vaoBind(name_);
 	glDisableVertexAttribArray(index);
 }
 
 void VArray::vertexAttribPointer(GLuint index, GLint size, GLenum type,
                                    GLboolean normalized, GLsizei stride, const GLvoid* pointer) {
-	bind();
+	vaoBind(name_);
 	glVertexAttribPointer(index, size, type, normalized, stride, pointer);
 }
 
