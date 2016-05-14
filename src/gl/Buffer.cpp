@@ -71,13 +71,17 @@ void Buffer::bind() const {
 }
 
 void Buffer::data(GLsizeiptr size, const GLvoid* data, GLenum usage) {
-	bufBind(GL_COPY_WRITE_BUFFER, name_);
-	glBufferData(GL_COPY_WRITE_BUFFER, size, data, usage);
+	GLenum target = (curBuf(target_) == name_) ? target_ : GL_COPY_WRITE_BUFFER;
+
+	bufBind(target, name_);
+	glBufferData(target, size, data, usage);
 }
 
 void Buffer::subData(GLintptr offset, GLsizeiptr size, const GLvoid* data) {
-	bufBind(GL_COPY_WRITE_BUFFER, name_);
-	glBufferSubData(GL_COPY_WRITE_BUFFER, offset, size, data);
+	GLenum target = (curBuf(target_) == name_) ? target_ : GL_COPY_WRITE_BUFFER;
+	
+	bufBind(target, name_);
+	glBufferSubData(target, offset, size, data);
 }
 
 }
