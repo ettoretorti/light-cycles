@@ -115,7 +115,6 @@ void World::runFor(double secs) {
     
     //remove dead players
     for(auto i=kill.rbegin(); i!=kill.rend(); ++i) {
-            auto c = _trails[*i].color();
             std::swap(_players[*i], _players[_players.size() - 1]);
             std::swap(_trails[*i], _trails[_trails.size() - 1]);
             _players.pop_back();
