@@ -3,6 +3,7 @@
 #include <GLFW/glfw3.h>
 
 #include <iostream>
+#include <string>
 
 #include <mathfu/glsl_mappings.h>
 #include <mathfu/quaternion.h>
@@ -55,14 +56,14 @@ static inline double toRad(double degrees) {
  * - a valid opengl context has been created and made current
  * - a valid window is returned
  */
-GLFWwindow* init() {
+GLFWwindow* init(int width, int height) {
         if(!glfwInit()) return nullptr;
 
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
         glfwWindowHint(GLFW_SAMPLES, 8); //8xMSAA
 
-        GLFWwindow* win = glfwCreateWindow(640, 480, "Light cycles", nullptr, nullptr);
+        GLFWwindow* win = glfwCreateWindow(width, height, "Light cycles", nullptr, nullptr);
 
         glfwMakeContextCurrent(win);
         glfwSwapInterval(1); //vsync
@@ -159,11 +160,26 @@ void mainloop(GLFWwindow* win, gl::Program& p) {
         }
 }
 
-int main() {
+int main(int argc, char** argv) {
         using namespace std;
         using namespace gl;
 
-        GLFWwindow* win = init();
+	int width = 640, height = 480;
+	
+	if(argc >= 3) {
+		try {
+			int w = stoi(argv[1]);
+			int h = stoi(argv[2]);
+
+			width  = w;
+			height = h;
+		} catch (...) {
+			cerr << "Could not parse dimensions from first 2 command line args" << endl;
+		}
+	}
+
+
+        GLFWwindow* win = init(width, height);
 
         Shader vs(GL_VERTEX_SHADER);
         vs.source(vshaderSrc);
