@@ -41,7 +41,11 @@ static void bufBind(GLenum target, GLuint name) {
 
 Buffer::Buffer(GLenum target) : name_(0), target_(target)
 {
-	glGenBuffers(1, &name_);
+	if(GLEW_ARB_direct_state_access) {
+		glCreateBuffers(1, &name_);
+	} else {
+		glGenBuffers(1, &name_);
+	}
 }
 
 Buffer::Buffer(Buffer&& other) : name_(other.name_), target_(other.target_)
@@ -71,6 +75,11 @@ void Buffer::bind() const {
 }
 
 void Buffer::data(GLsizeiptr size, const GLvoid* data, GLenum usage) {
+	if(GLEW_ARB_direct_state_access) {
+		glNamedBufferData(name_, size, data, usage);
+		return;
+	}
+
 	GLenum target = (curBuf(target_) == name_) ? target_ : GL_COPY_WRITE_BUFFER;
 
 	bufBind(target, name_);
@@ -78,6 +87,11 @@ void Buffer::data(GLsizeiptr size, const GLvoid* data, GLenum usage) {
 }
 
 void Buffer::subData(GLintptr offset, GLsizeiptr size, const GLvoid* data) {
+	if(GLEW_ARB_direct_state_access) {
+		glNamedBufferSubData(name_, offset, size, data);
+		return;
+	}
+
 	GLenum target = (curBuf(target_) == name_) ? target_ : GL_COPY_WRITE_BUFFER;
 	
 	bufBind(target, name_);

@@ -16,7 +16,11 @@ static void vaoBind(GLuint name) {
 
 VArray::VArray() : name_(0)
 {
-	glGenVertexArrays(1, &name_);
+	if(GLEW_ARB_direct_state_access) {
+		glCreateVertexArrays(1, &name_);
+	} else {
+		glGenVertexArrays(1, &name_);
+	}
 }
 
 VArray::VArray(VArray&& other) : name_(other.name_)
@@ -38,11 +42,21 @@ void VArray::bind() const {
 }
 
 void VArray::enableVertexAttrib(GLuint index) {
+	if(GLEW_ARB_direct_state_access) {
+		glEnableVertexArrayAttrib(name_, index);
+		return;
+	}
+
 	vaoBind(name_);
 	glEnableVertexAttribArray(index);
 }
 
 void VArray::disableVertexAttrib(GLuint index) {
+	if(GLEW_ARB_direct_state_access) {
+		glDisableVertexArrayAttrib(name_, index);
+		return;
+	}
+
 	vaoBind(name_);
 	glDisableVertexAttribArray(index);
 }
