@@ -4,7 +4,6 @@ project (obj_renderer)
 set(CMAKE_CXX_STANDARD 11)
 
 find_package(Boost REQUIRED)
-find_package(GLEW REQUIRED)
 find_package(OpenGL REQUIRED)
 add_subdirectory(${CMAKE_SOURCE_DIR}/deps/glfw)
 
@@ -31,5 +30,4 @@ target_compile_options(lcycles
 target_link_libraries(lcycles
                       glfw
                       ${GLFW_LIBRARIES}
-                      ${GLEW_LIBRARIES}
                       ${OPENGL_LIBRARIES})
