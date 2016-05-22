@@ -2,6 +2,7 @@ cmake_minimum_required (VERSION 3.1)
 project (lcycles)
 
 set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(OpenGL REQUIRED)
 add_subdirectory(${CMAKE_SOURCE_DIR}/deps/glfw)
