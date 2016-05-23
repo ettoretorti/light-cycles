@@ -24,9 +24,14 @@ target_include_directories(lcycles
                            PRIVATE ${MATHFU_INCLUDE_DIRS})
 
 target_compile_options(lcycles
-	               PRIVATE -Wall
-		       PRIVATE -Wextra
-		       PRIVATE -pedantic)
+	               PRIVATE -Wall)
+
+if (NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+    #g++ options
+    target_compile_options(lcycles
+                           PRIVATE -Wextra
+                           PRIVATE -pedantic)
+endif()
 
 target_link_libraries(lcycles
                       glfw
