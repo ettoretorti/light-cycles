@@ -164,7 +164,7 @@ int main(int argc, char** argv) {
         using namespace std;
         using namespace gl;
 
-	int width = 640, height = 480;
+	int width = 600, height = 600;
 	
 	if(argc >= 3) {
 		try {
