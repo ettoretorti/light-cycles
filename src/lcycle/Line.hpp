@@ -12,12 +12,12 @@ public:
     Line& operator=(const Line& other);
     Line(Line&& other);
     Line& operator=(Line&& other);
-    
+
     const mathfu::vec2& start() const;
     const mathfu::vec2& end() const;
     mathfu::vec2& start();
     mathfu::vec2& end();
-    
+
     double len() const;
     double lenSquared() const;
 

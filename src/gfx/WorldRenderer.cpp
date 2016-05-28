@@ -40,10 +40,10 @@ void WorldRenderer::render() {
 
     for(size_t i=0; i<players.size(); i++) {
         auto line = players[i].cycle.toLine();
-        
+
         buf[4*i + 0] = line.start().x();
         buf[4*i + 1] = line.start().y();
-        
+
         buf[4*i + 2] = line.end().x();
         buf[4*i + 3] = line.end().y();
     }

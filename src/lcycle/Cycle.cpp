@@ -23,7 +23,7 @@ void Cycle::rotate(double dCC) {
 
 Line Cycle::toLine() const {
 	using namespace mathfu;
-	
+
 	vec2 dir = vec2(cos(_orientation), sin(_orientation));
 
 	return Line(_pos - (float)(CYCLE_LENGTH/2.0) * dir, _pos + (float)(CYCLE_LENGTH/2.0) * dir);

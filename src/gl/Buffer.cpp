@@ -93,7 +93,7 @@ void Buffer::subData(GLintptr offset, GLsizeiptr size, const GLvoid* data) {
 	}
 
 	GLenum target = (curBuf(target_) == name_) ? target_ : GL_COPY_WRITE_BUFFER;
-	
+
 	bufBind(target, name_);
 	glBufferSubData(target, offset, size, data);
 }

@@ -10,7 +10,7 @@ namespace gfx {
 class WorldRenderer {
 using Color = mathfu::vec4;
 
-public: 
+public:
     static const Color TRAIL_COLOR;
     static const Color CYCLE_COLOR;
     static const Color BG_COLOR;

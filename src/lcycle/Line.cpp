@@ -50,19 +50,19 @@ bool Line::intersect(const Line& l1, const Line& l2) {
 
     vec2 x = l1.start();
     vec2 a = l1.end() - x;
-    
+
     vec2 y = l2.start();
     vec2 b = l2.end() - y;
-    
+
     //  a0(y1 - x1) - a1(y0 - x0)
     //  -------------------------
     //      a1 * b0 - a0 * b1
-    
+
     double denominator = (a.y() * b.x() - a.x() * b.y());
-    
+
     //parallel or coincident
     if(denominator == 0.0) return false;
-    
+
     double mu = (a.x() * (y.y() - x.y()) - a.y() * (y.x() - x.x())) / denominator;
     double lambda = (y.x() + mu * b.x() - x.x()) / a.x();
 

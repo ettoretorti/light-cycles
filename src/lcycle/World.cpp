@@ -39,7 +39,7 @@ World& World::operator=(World&& o) {
 void World::runFor(double secs) {
     using namespace mathfu;
 
-    //update cycle positions    
+    //update cycle positions
     for(auto& player : _players) {
         player.cycle.rotate( -1 * TURN_SPEED * secs * player.input().turnDir);
         player.cycle.runFor(secs);
@@ -61,9 +61,9 @@ void World::runFor(double secs) {
         _drawing = true;
     }
     _curTime = fmod(_curTime, 2 * _dashTime);
-    
- 
-    //players that died this frame, RIP   
+
+
+    //players that died this frame, RIP
     std::set<size_t> kill;
 
     std::vector<Line> cycLines;
@@ -112,7 +112,7 @@ void World::runFor(double secs) {
             }
         }
     }
-    
+
     //remove dead players
     for(auto i=kill.rbegin(); i!=kill.rend(); ++i) {
             std::swap(_players[*i], _players[_players.size() - 1]);
