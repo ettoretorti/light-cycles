@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <string>
+#include <stdexcept>
 
 #include <mathfu/glsl_mappings.h>
 #include <mathfu/quaternion.h>
@@ -95,28 +96,49 @@ std::function<lcycle::CycleInput()> mkInputFunc(GLFWwindow* win, int lKey, int r
     };
 }
 
-void mainloop(GLFWwindow* win, gl::Program& p) {
+void mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
     using namespace lcycle;
     using namespace gfx;
     using namespace mathfu;
 
     const vec4 P_COLORS[] = {
-        vec4(0.0, 0.0, 1.0, 1.0),  // blue
         vec4(1.0, 0.0, 0.0, 1.0),  // red
+        vec4(0.0, 0.0, 1.0, 1.0),  // blue
         vec4(1.0, 1.0, 0.0, 1.0),  // yellow
+        vec4(0.0, 1.0, 0.0, 1.0),  // green
     };
 
     const vec4 T_COLORS[] = {
-        vec4(0.0, 0.75, 1.0, 1.0),  // blue
-        vec4(1.0, 0.4, 0.4, 1.0),   // red
-        vec4(1.0, 1.0, 0.5, 1.0),   // yellow
+        vec4(1.0, 0.4, 0.4, 1.0),  // red
+        vec4(0.0, 0.75, 1.0, 1.0), // blue
+        vec4(1.0, 1.0, 0.5, 1.0),  // yellow
+        vec4(0.6, 1.0, 0.5, 1.0),  // green
     };
 
-    Cycle p1({-1.0, 0.0}, 3.14159), p2({1.0, 0.0}, 0.0);
-    std::function<CycleInput()> i1 = mkInputFunc(win, GLFW_KEY_A, GLFW_KEY_D);
-    std::function<CycleInput()> i2 = mkInputFunc(win, GLFW_KEY_LEFT, GLFW_KEY_RIGHT);
+    const std::function<CycleInput()> INPUTS[] = {
+        mkInputFunc(win, GLFW_KEY_LEFT, GLFW_KEY_RIGHT),
+        mkInputFunc(win, GLFW_KEY_A, GLFW_KEY_D),
+        mkInputFunc(win, GLFW_KEY_J, GLFW_KEY_L),
+        mkInputFunc(win, GLFW_KEY_F, GLFW_KEY_H),
+    };
 
-    World wo(50.0, 0.2, {{p1, i1, P_COLORS[0], T_COLORS[0]}, {p2, i2, P_COLORS[1], T_COLORS[1]}});
+    const size_t MAX_PLAYERS = sizeof(P_COLORS) / sizeof(P_COLORS[0]);
+    if(nPlayers > MAX_PLAYERS) {
+        throw std::range_error("Maximum " + std::to_string(MAX_PLAYERS) + " players allowed");
+    }
+
+    std::vector<Player> players;
+    players.reserve(nPlayers);
+
+    const double anglePerPlayer = 2*3.14159 / nPlayers;
+    double curAngle = 0.0;
+    for(size_t i = 0; i < nPlayers; i++) {
+        Cycle c({(float)cos(curAngle), (float)sin(curAngle)}, curAngle);
+        players.push_back({c, INPUTS[i], P_COLORS[i], T_COLORS[i]});
+        curAngle += anglePerPlayer;
+    }
+
+    World wo(50.0, 0.2, std::move(players));
     WorldRenderer wr(wo);
 
     mathfu::mat4 mdl  = mathfu::mat4::Identity();
@@ -203,7 +225,11 @@ int main(int argc, char** argv) {
     }
     p.use();
 
-    mainloop(win, p);
+    try {
+        mainloop(win, p, 2);
+    } catch(exception& ex) {
+        cerr << ex.what() << endl;
+    }
 
     glfwDestroyWindow(win);
 
