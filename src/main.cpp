@@ -188,7 +188,12 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
         w = nW; h = nH;
 
         double curTime = glfwGetTime();
-        if(running) wo.runFor(curTime - time);
+        if(running) {
+            wo.runFor(curTime - time);
+        } else {
+            glfwWaitEvents();
+            curTime = glfwGetTime();
+        }
         time = curTime;
 
         glClear(GL_COLOR_BUFFER_BIT);
