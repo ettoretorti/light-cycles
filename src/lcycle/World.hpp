@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <functional>
+#include <string>
 
 #include <mathfu/glsl_mappings.h>
 
@@ -16,6 +17,7 @@ struct Player {
 
         Cycle cycle;
         std::function<CycleInput()> input;
+        std::string name;
         Color color;
         Color tColor;
 };

@@ -123,6 +123,13 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
         mkInputFunc(win, GLFW_KEY_F, GLFW_KEY_H),
     };
 
+    const std::string NAMES[] = {
+        "RED",
+        "BLUE",
+        "YELLOW",
+        "GREEN",
+    };
+
     const size_t MAX_PLAYERS = sizeof(P_COLORS) / sizeof(P_COLORS[0]);
     if(nPlayers > MAX_PLAYERS) {
         throw std::range_error("Maximum " + std::to_string(MAX_PLAYERS) + " players allowed");
@@ -135,7 +142,7 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
     double curAngle = 0.0;
     for(size_t i = 0; i < nPlayers; i++) {
         Cycle c({(float)cos(curAngle), (float)sin(curAngle)}, curAngle);
-        players.push_back({c, INPUTS[i], P_COLORS[i], T_COLORS[i]});
+        players.push_back({c, INPUTS[i], NAMES[i], P_COLORS[i], T_COLORS[i]});
         curAngle += anglePerPlayer;
     }
 
@@ -161,6 +168,15 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
         glfwPollEvents();
 
         if(glfwGetKey(win, GLFW_KEY_ESCAPE)) { break; }
+        if(wo.players().size() == 1) {
+            std::cout << "The winner is: " << wo.players()[0].name << std::endl;
+            running = false;
+            break;
+        } else if(wo.players().size() == 0) {
+            std::cout << "Draw" << std::endl;
+            running = false;
+            break;
+        }
 
         bool pNow = glfwGetKey(win, GLFW_KEY_P);
         if(!pPressed && pNow) running = !running;
