@@ -96,7 +96,8 @@ std::function<lcycle::CycleInput()> mkInputFunc(GLFWwindow* win, int lKey, int r
     };
 }
 
-void mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
+// Returns true if the players want a rematch
+bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
     using namespace lcycle;
     using namespace gfx;
     using namespace mathfu;
@@ -178,6 +179,13 @@ void mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
         wr.render();
         glfwSwapBuffers(win);
     }
+
+    bool rematch = false;
+    while(!running && !glfwWindowShouldClose(win) && !glfwGetKey(win, GLFW_KEY_ESCAPE) && !(rematch = glfwGetKey(win, GLFW_KEY_R))) {
+        glfwWaitEvents();
+    }
+
+    return rematch;
 }
 
 int main(int argc, char** argv) {
@@ -226,7 +234,7 @@ int main(int argc, char** argv) {
     p.use();
 
     try {
-        mainloop(win, p, 2);
+        while(mainloop(win, p, 2));
     } catch(exception& ex) {
         cerr << ex.what() << endl;
     }
