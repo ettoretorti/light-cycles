@@ -47,6 +47,11 @@ const char* fshaderSrc =
 
 static inline double toRad(double degrees) { return degrees * 3.1415926 / 180.0; }
 
+void glfw_error(int error, const char* msg) {
+    std::cerr << "GLFW error with code: " << error << std::endl;
+    std::cerr << msg << std::endl;
+}
+
 /*!
  * Preconditions
  * - None
@@ -57,6 +62,8 @@ static inline double toRad(double degrees) { return degrees * 3.1415926 / 180.0;
  * - a valid window is returned
  */
 GLFWwindow* init(int width, int height) {
+    glfwSetErrorCallback(glfw_error);
+
     if(!glfwInit()) return nullptr;
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -64,6 +71,7 @@ GLFWwindow* init(int width, int height) {
     glfwWindowHint(GLFW_SAMPLES, 8);  // 8xMSAA
 
     GLFWwindow* win = glfwCreateWindow(width, height, "Light cycles", nullptr, nullptr);
+    if (!win) return nullptr;
 
     glfwMakeContextCurrent(win);
     glfwSwapInterval(1);  // vsync
@@ -228,6 +236,10 @@ int main(int argc, char** argv) {
     }
 
     GLFWwindow* win = init(width, height);
+    if (!win) {
+        cerr << "Could not create window" << endl;
+        return -1;
+    }
 
     Shader vs(GL_VERTEX_SHADER);
     vs.source(vshaderSrc);
