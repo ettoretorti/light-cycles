@@ -6,6 +6,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(GLEW REQUIRED)
 find_package(OpenGL REQUIRED)
+
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(${CMAKE_SOURCE_DIR}/deps/glfw)
 
 set(GLFW_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/dep/glfw/include)
@@ -17,11 +21,9 @@ add_executable(lcycles ${SOURCE_FILES})
 target_include_directories(lcycles
 	                   PRIVATE ${CMAKE_SOURCE_DIR}/src
                            PRIVATE ${CMAKE_SOURCE_DIR}/include
-                           PRIVATE ${BOOST_INCLUDE_DIRS}
                            PRIVATE ${GLFW_INCLUDE_DIRS}
                            PRIVATE ${GLEW_INCLUDE_DIRS}
-                           PRIVATE ${GL_INCLUDE_DIRS}
-                           PRIVATE ${MATHFU_INCLUDE_DIRS})
+                           PRIVATE ${GL_INCLUDE_DIRS})
 
 target_compile_options(lcycles
 	               PRIVATE -Wall)
