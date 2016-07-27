@@ -87,7 +87,6 @@ void WorldRenderer::render() {
         curStart += 2;
     }
 
-
     _trails.bind();
     _vao.vertexAttribPointer(0, 2, GL_FLOAT);
     curStart = 0;
