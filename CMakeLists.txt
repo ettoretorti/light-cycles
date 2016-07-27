@@ -15,6 +15,11 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/deps/glfw)
 set(GLFW_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/dep/glfw/include)
 
 file(GLOB_RECURSE SOURCE_FILES "src/*.cpp" "src/*.c")
+#source groups split files into the correct hierarchy in VS
+source_group(src REGULAR_EXPRESSION ${CMAKE_SOURCE_DIR}/src/*)
+source_group(src\\gl REGULAR_EXPRESSION ${CMAKE_SOURCE_DIR}/src/gl/*)
+source_group(src\\gfx REGULAR_EXPRESSION ${CMAKE_SOURCE_DIR}/src/gfx/*)
+source_group(src\\lcycle REGULAR_EXPRESSION ${CMAKE_SOURCE_DIR}/src/lcycle/*)
 
 add_executable(lcycles ${SOURCE_FILES})
 
