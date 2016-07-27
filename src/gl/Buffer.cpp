@@ -67,6 +67,11 @@ GLenum& Buffer::target() {
 }
 
 Buffer::~Buffer() {
+	for (size_t i = 0; i < sizeof(curBufs) / sizeof(curBufs[0]); i++) {
+		if (curBufs[i] == name_) {
+			curBufs[i] = 0;
+		}
+	}
 	glDeleteBuffers(1, &name_);
 }
 

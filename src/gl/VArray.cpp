@@ -34,6 +34,9 @@ VArray& VArray::operator=(VArray&& other) {
 }
 
 VArray::~VArray() {
+	if (curVAO == name_) {
+		curVAO = 0;
+	}
 	glDeleteVertexArrays(1, &name_);
 }
 
