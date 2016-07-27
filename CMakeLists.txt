@@ -24,14 +24,14 @@ source_group(src\\lcycle REGULAR_EXPRESSION ${CMAKE_SOURCE_DIR}/src/lcycle/*)
 add_executable(lcycles ${SOURCE_FILES})
 
 target_include_directories(lcycles
-	                   PRIVATE ${CMAKE_SOURCE_DIR}/src
+                           PRIVATE ${CMAKE_SOURCE_DIR}/src
                            PRIVATE ${CMAKE_SOURCE_DIR}/include
                            PRIVATE ${GLFW_INCLUDE_DIRS}
                            PRIVATE ${GLEW_INCLUDE_DIRS}
                            PRIVATE ${GL_INCLUDE_DIRS})
 
 target_compile_options(lcycles
-	               PRIVATE -Wall)
+                       PRIVATE -Wall)
 
 if (NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
     #g++ options
