@@ -45,7 +45,6 @@ const char* fshaderSrc =
     "  color = fColor;\n"
     "}\n";
 
-static inline double toRad(double degrees) { return degrees * 3.1415926 / 180.0; }
 
 void glfw_error(int error, const char* msg) {
     std::cerr << "GLFW error with code: " << error << std::endl;
