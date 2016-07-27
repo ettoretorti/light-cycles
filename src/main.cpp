@@ -52,6 +52,12 @@ void glfw_error(int error, const char* msg) {
     std::cerr << msg << std::endl;
 }
 
+#ifndef NDEBUG
+void APIENTRY gl_error(GLenum src, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* msg, const void* uParam) {
+    std::cerr << msg << std::endl;
+}
+#endif
+
 /*!
  * Preconditions
  * - None
@@ -84,6 +90,14 @@ GLFWwindow* init(int width, int height) {
         glfwDestroyWindow(win);
         return nullptr;
     }
+
+#ifndef NDEBUG
+    if (GLEW_KHR_debug) {
+        glDebugMessageCallback(gl_error, nullptr);
+        glEnable(GL_DEBUG_OUTPUT);
+        std::cout << "Registered gl error callback" << std::endl;
+    }
+#endif
 
     return win;
 }
