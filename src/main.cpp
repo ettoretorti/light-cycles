@@ -117,6 +117,18 @@ std::function<lcycle::CycleInput()> mkInputFunc(GLFWwindow* win, int lKey, int r
     };
 }
 
+mathfu::mat4 projection(int winWidth, int winHeight, double worldSize) {
+    double side = worldSize * 3.0 / 5.0;
+
+    if(winWidth >= winHeight) {
+        double ratio = winWidth / (double) winHeight;
+        return mathfu::mat4::Ortho(-side * ratio, side * ratio, -side, side, 0.1, 2.0);
+    } else {
+        double ratio = winHeight / (double) winWidth;
+        return mathfu::mat4::Ortho(-side, side, -side * ratio, side * ratio, 0.1, 2.0);
+    }
+}
+
 // Returns true if the players want a rematch
 bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
     using namespace lcycle;
@@ -166,21 +178,24 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
         players.push_back({c, INPUTS[i], NAMES[i], P_COLORS[i], T_COLORS[i]});
         curAngle += anglePerPlayer;
     }
-
-    World wo(50.0, 0.2, std::move(players));
+    
+    const double WORLD_SIZE = 50.0;
+    World wo(WORLD_SIZE, 0.2, std::move(players));
     WorldRenderer wr(wo);
-
-    mathfu::mat4 mdl  = mathfu::mat4::Identity();
-    mathfu::mat4 view = mathfu::mat4::LookAt(mathfu::vec3(0.0), mathfu::vec3(0.0, 0.0, 1.0),
-                                             mathfu::vec3(0.0, 1.0, 0.0), 1.0);
-    mathfu::mat4 proj = mathfu::mat4::Ortho(-30, 30, -30, 30, 0.1, 2.0);
-
-    glUniformMatrix4fv(p.getUniform("model"), 1, false, &mdl[0]);
-    glUniformMatrix4fv(p.getUniform("viewProjection"), 1, false, &(proj * view)[0]);
 
     int w, h;
     glfwGetFramebufferSize(win, &w, &h);
     glViewport(0, 0, w, h);
+    
+    mat4 mdl  = mathfu::mat4::Identity();
+    glUniformMatrix4fv(p.getUniform("model"), 1, false, &mdl[0]);
+
+    mat4 view = mathfu::mat4::LookAt(mathfu::vec3(0.0), mathfu::vec3(0.0, 0.0, 1.0),
+                                     mathfu::vec3(0.0, 1.0, 0.0), 1.0);
+    mat4 proj = projection(w, h, WORLD_SIZE);
+
+    glUniformMatrix4fv(p.getUniform("viewProjection"), 1, false, &(proj * view)[0]);
+
 
     bool running  = false;
     bool pPressed = false;
@@ -205,7 +220,11 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
 
         int nW, nH;
         glfwGetFramebufferSize(win, &nW, &nH);
-        if(nW != w || nH != h) glViewport(0, 0, w, h);
+        if(nW != w || nH != h) {
+            glViewport(0, 0, nW, nH);
+            mat4 proj = projection(nW, nH, WORLD_SIZE);
+            glUniformMatrix4fv(p.getUniform("viewProjection"), 1, false, &(proj * view)[0]);
+        }
         w = nW; h = nH;
 
         double curTime = glfwGetTime();
