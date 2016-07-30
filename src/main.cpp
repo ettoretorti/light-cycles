@@ -224,8 +224,10 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
             glViewport(0, 0, nW, nH);
             mat4 proj = projection(nW, nH, WORLD_SIZE);
             glUniformMatrix4fv(p.getUniform("viewProjection"), 1, false, &(proj * view)[0]);
+
+            w = nW;
+            h = nH;
         }
-        w = nW; h = nH;
 
         double curTime = glfwGetTime();
         if(running) {
@@ -244,6 +246,21 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
     bool rematch = false;
     while(!running && !glfwWindowShouldClose(win) && !glfwGetKey(win, GLFW_KEY_ESCAPE) && !(rematch = glfwGetKey(win, GLFW_KEY_R))) {
         glfwWaitEvents();
+        
+        int nW, nH;
+        glfwGetFramebufferSize(win, &nW, &nH);
+        if(nW != w || nH != h) {
+            glViewport(0, 0, nW, nH);
+            mat4 proj = projection(nW, nH, WORLD_SIZE);
+            glUniformMatrix4fv(p.getUniform("viewProjection"), 1, false, &(proj * view)[0]);
+            
+            w = nW;
+            h = nH;
+        }
+        
+        glClear(GL_COLOR_BUFFER_BIT);
+        wr.render();
+        glfwSwapBuffers(win);
     }
 
     return rematch;
