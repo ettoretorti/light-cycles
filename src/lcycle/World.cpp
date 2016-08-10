@@ -93,22 +93,13 @@ void World::runFor(double secs) {
         }
     }
 
-    //build a list of all the trails and do cycle-trail collision
-    std::vector<Line> allLines;
-    size_t total = 0;
+    //check for cycle-trail collisions
     for(auto& trail : _trails) {
-        total += trail.size();
-    }
-    allLines.reserve(total);
-
-    for(auto& trail : _trails) {
-        allLines.insert(allLines.end(), trail.data().cbegin(), trail.data().cend());
-    }
-
-    for(size_t i=0; i<cycLines.size(); i++) {
-        for(auto& line : allLines) {
-            if(Line::intersect(cycLines[i], line)) {
-                kill.insert(i);
+        for(auto& line : trail.data()) {
+            for(size_t i=0; i<cycLines.size(); i++) {
+                if(Line::intersect(cycLines[i], line)) {
+                    kill.insert(i);
+                }
             }
         }
     }
