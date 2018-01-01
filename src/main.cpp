@@ -110,10 +110,7 @@ std::function<lcycle::CycleInput()> mkInputFunc(GLFWwindow* win, int lKey, int r
         bool l = glfwGetKey(win, lKey);
         bool r = glfwGetKey(win, rKey);
 
-        if(l && r) return {0.0};
-        else if(l) return {-1.0};
-        else if(r) return {1.0};
-        else       return {0.0};
+	return {(float)(-l + r)};
     };
 }
 

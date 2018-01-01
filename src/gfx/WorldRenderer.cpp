@@ -6,13 +6,9 @@
 
 namespace gfx {
 
-const mathfu::vec4 WorldRenderer::TRAIL_COLOR = mathfu::vec4(1.0, 0.0, 0.0, 1.0);
-const mathfu::vec4 WorldRenderer::CYCLE_COLOR = mathfu::vec4(0.0, 1.0, 0.0, 1.0);
-const mathfu::vec4 WorldRenderer::BG_COLOR    = mathfu::vec4(1.0, 1.0, 1.0, 1.0);
-
-WorldRenderer::WorldRenderer(const lcycle::World& w)
+WorldRenderer::WorldRenderer(const lcycle::World& w, const Color& bgColor)
     : _world(w), _trails(GL_ARRAY_BUFFER),
-      _cycles(GL_ARRAY_BUFFER), _bg(GL_ARRAY_BUFFER), _vao()
+      _cycles(GL_ARRAY_BUFFER), _bg(GL_ARRAY_BUFFER), _vao(), _bgColor(bgColor)
 {
     using namespace mathfu;
 
@@ -75,7 +71,7 @@ void WorldRenderer::render() {
 
     _bg.bind();
     _vao.vertexAttribPointer(0, 2, GL_FLOAT);
-    glVertexAttrib4fv(1, &BG_COLOR[0]); //color
+    glVertexAttrib4fv(1, &_bgColor[0]); //color
     glDrawArrays(GL_LINE_LOOP, 0, 4);
 
     _cycles.bind();

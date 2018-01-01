@@ -11,11 +11,7 @@ class WorldRenderer {
 using Color = mathfu::vec4;
 
 public:
-    static const Color TRAIL_COLOR;
-    static const Color CYCLE_COLOR;
-    static const Color BG_COLOR;
-
-    WorldRenderer(const lcycle::World& w);
+    WorldRenderer(const lcycle::World& w, const Color& bgColor = Color(1.0, 1.0, 1.0, 1.0));
     void render();
 
 private:
@@ -24,6 +20,7 @@ private:
     gl::Buffer _cycles;
     gl::Buffer _bg;
     gl::VArray _vao;
+    Color _bgColor;
 };
 
 }
