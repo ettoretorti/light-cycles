@@ -8,7 +8,7 @@
 namespace lcycle {
 
 const double CYCLE_SPEED = 6.0;
-const double CYCLE_LENGTH = 1.0;
+const double CYCLE_LENGTH = 0.9;
 const double TURN_SPEED  =  90 * 3.14159;
 
 struct CycleInput {
