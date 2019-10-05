@@ -4,14 +4,15 @@
 #include "gl/Buffer.hpp"
 #include "gl/VArray.hpp"
 #include <mathfu/glsl_mappings.h>
+#include <vector>
 
 namespace gfx {
 
-class WorldRenderer {
-using Color = mathfu::vec4;
+constexpr GLfloat BG_COLOR[4] = { 1.0, 1.0, 1.0, 1.0 };
 
+class WorldRenderer {
 public:
-    WorldRenderer(const lcycle::World& w, const Color& bgColor = Color(1.0, 1.0, 1.0, 1.0));
+    WorldRenderer(const lcycle::World& w);
     void render();
 
 private:
@@ -20,7 +21,7 @@ private:
     gl::Buffer _cycles;
     gl::Buffer _bg;
     gl::VArray _vao;
-    Color _bgColor;
+    std::vector<GLfloat> _buf;
 };
 
 }
