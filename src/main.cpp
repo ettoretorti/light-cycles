@@ -199,6 +199,7 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
     double time = glfwGetTime();
     while(!glfwWindowShouldClose(win)) {
         glfwPollEvents();
+        double curTime = glfwGetTime();
 
         if(glfwGetKey(win, GLFW_KEY_ESCAPE)) { break; }
         if(wo.players().size() == 1) {
@@ -215,6 +216,15 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
         if(!pPressed && pNow) running = !running;
         pPressed = pNow;
 
+
+        if(running) {
+            wo.runFor(curTime - time);
+        } else {
+            glfwWaitEvents();
+            curTime = glfwGetTime();
+        }
+        time = curTime;
+
         int nW, nH;
         glfwGetFramebufferSize(win, &nW, &nH);
         if(nW != w || nH != h) {
@@ -225,15 +235,6 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
             w = nW;
             h = nH;
         }
-
-        double curTime = glfwGetTime();
-        if(running) {
-            wo.runFor(curTime - time);
-        } else {
-            glfwWaitEvents();
-            curTime = glfwGetTime();
-        }
-        time = curTime;
 
         glClear(GL_COLOR_BUFFER_BIT);
         wr.render();
