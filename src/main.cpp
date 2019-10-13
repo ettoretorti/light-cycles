@@ -114,6 +114,17 @@ std::function<lcycle::CycleInput()> mkInputFunc(GLFWwindow* win, int lKey, int r
     };
 }
 
+std::function<lcycle::CycleInput()> jsInputFunc(int joystick, int axis) {
+	return [joystick, axis]() -> lcycle::CycleInput {
+		int count;
+		float val = glfwGetJoystickAxes(joystick, &count)[axis];
+		if (val < 0.15 && val > -0.15) {
+			val = 0;
+		}
+		return {val};
+	};
+}
+
 mathfu::mat4 projection(int winWidth, int winHeight, double worldSize) {
     double side = worldSize * 3.0 / 5.0;
 
