@@ -4,6 +4,7 @@
 #include <vector>
 #include <algorithm>
 #include <set>
+#include <map>
 
 #include <mathfu/glsl_mappings.h>
 
@@ -36,12 +37,24 @@ World& World::operator=(World&& o) {
     return *this;
 }
 
-void World::runFor(double secs) {
+void World::runFor(double secs, const std::vector<std::pair<int, CycleInput>>& inputs) {
     using namespace mathfu;
 
+    std::map<int, int> livingPlayers;
+    for(auto i = 0u; i < _players.size(); i++) {
+        livingPlayers.insert({_players[i].id, i});
+    }
+    std::vector<std::pair<int, CycleInput>> adjustedInputs;
+    for(const auto& input : inputs) {
+        if (livingPlayers.count(input.first) > 0) {
+            adjustedInputs.push_back({livingPlayers[input.first], input.second});
+        }
+    }
+
     //update cycle positions
-    for(auto& player : _players) {
-        player.cycle.rotate( -1 * TURN_SPEED * secs * player.input().turnDir);
+    for(const auto& input : adjustedInputs) {
+        auto& player = _players[input.first];
+        player.cycle.rotate( -1 * TURN_SPEED * secs * input.second.turnDir);
         player.cycle.runFor(secs);
     }
 
@@ -49,12 +62,14 @@ void World::runFor(double secs) {
     if(_drawing && _curTime > 2 * _dashTime) {
         _drawing = false;
     } else if(_drawing) {
-        for(size_t i=0; i<_players.size(); i++) {
+        for(const auto& input : adjustedInputs) {
+            auto i = input.first;
             auto coord = _players[i].cycle.toLine().start();
             _trails[i][_trails[i].size()-1].end() = coord;
         }
     } else if(_curTime > _dashTime) {
-        for(size_t i=0; i<_players.size(); i++) {
+        for(const auto& input : adjustedInputs) {
+            auto i = input.first;
             auto coord = _players[i].cycle.toLine().start();
             _trails[i].add(Line(coord, coord));
         }

@@ -3,6 +3,7 @@
 #include <vector>
 #include <functional>
 #include <string>
+#include <utility>
 
 #include <mathfu/glsl_mappings.h>
 
@@ -13,13 +14,13 @@
 namespace lcycle {
 
 struct Player {
-        using Color = mathfu::vec4;
+    using Color = mathfu::vec4;
 
-        Cycle cycle;
-        std::function<CycleInput()> input;
-        std::string name;
-        Color color;
-        Color tColor;
+    Cycle cycle;
+    int id;
+    std::string name;
+    Color color;
+    Color tColor;
 };
 
 
@@ -33,7 +34,7 @@ public:
     World(World&& other);
     World& operator=(World&& other);
 
-    void runFor(double secs);
+    void runFor(double secs, const std::vector<std::pair<int, CycleInput>>& inputs);
     const std::vector<Player>& players() const;
     const std::vector<Trail>& trails() const;
     double size() const;

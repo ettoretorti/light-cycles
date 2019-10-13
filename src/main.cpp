@@ -178,13 +178,16 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
 
     std::vector<Player> players;
     players.reserve(nPlayers);
+    std::vector<std::pair<int, CycleInput>> playerInputs;
+    playerInputs.reserve(nPlayers);
 
     const double anglePerPlayer = 2*3.14159 / nPlayers;
     double curAngle = 0.0;
     for(size_t i = 0; i < nPlayers; i++) {
         Cycle c({(float)cos(curAngle), (float)sin(curAngle)}, curAngle);
-        players.push_back({c, INPUTS[i], NAMES[i], P_COLORS[i], T_COLORS[i]});
+        players.push_back({c, (int)i, NAMES[i], P_COLORS[i], T_COLORS[i]});
         curAngle += anglePerPlayer;
+        playerInputs.push_back(std::make_pair<int, CycleInput>(i, {}));
     }
     
     const double WORLD_SIZE = 50.0;
@@ -229,7 +232,10 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
 
 
         if(running) {
-            wo.runFor(curTime - time);
+            for(auto i = 0u; i < nPlayers; i++) {
+                playerInputs[i].second = INPUTS[i]();
+            }
+            wo.runFor(curTime - time, playerInputs);
         } else {
             glfwWaitEvents();
             curTime = glfwGetTime();
