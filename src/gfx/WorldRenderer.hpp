@@ -12,11 +12,10 @@ constexpr GLfloat BG_COLOR[4] = { 1.0, 1.0, 1.0, 1.0 };
 
 class WorldRenderer {
 public:
-    WorldRenderer(const lcycle::World& w);
-    void render();
+    WorldRenderer();
+    void render(const lcycle::World& w);
 
 private:
-    const lcycle::World& _world;
     gl::Buffer _trails;
     gl::Buffer _cycles;
     gl::Buffer _bg;

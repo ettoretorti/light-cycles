@@ -6,27 +6,24 @@
 
 namespace gfx {
 
-WorldRenderer::WorldRenderer(const lcycle::World& w)
-    : _world(w), _trails(GL_ARRAY_BUFFER),
+WorldRenderer::WorldRenderer()
+    : _trails(GL_ARRAY_BUFFER),
       _cycles(GL_ARRAY_BUFFER), _bg(GL_ARRAY_BUFFER), _vao(), _buf()
-{
-    using namespace mathfu;
+{}
 
-    float sizeDiv2 = w.size() / 2.0;
-
+void WorldRenderer::render(const lcycle::World& w) {
+    const float sizeDiv2 = w.size() / 2.0;
     const GLfloat bgVecs[] = {
         -sizeDiv2, -sizeDiv2,
         -sizeDiv2,  sizeDiv2,
          sizeDiv2,  sizeDiv2,
          sizeDiv2, -sizeDiv2 };
-
     _bg.data(sizeof(bgVecs), &bgVecs, GL_STATIC_DRAW);
-}
 
-void WorldRenderer::render() {
+
     // Update the buffers
-    const auto& players = _world.players();
-    const auto& trails = _world.trails();
+    const auto& players = w.players();
+    const auto& trails = w.trails();
 
     size_t nLines = 0;
     for(const auto& trail : trails)

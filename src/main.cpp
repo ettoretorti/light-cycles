@@ -192,7 +192,7 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
     
     const double WORLD_SIZE = 50.0;
     World wo(WORLD_SIZE, 0.14, std::move(players));
-    WorldRenderer wr(wo);
+    WorldRenderer wr;
 
     int w, h;
     glfwGetFramebufferSize(win, &w, &h);
@@ -254,7 +254,7 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
         }
 
         glClear(GL_COLOR_BUFFER_BIT);
-        wr.render();
+        wr.render(wo);
         glfwSwapBuffers(win);
     }
 
@@ -274,7 +274,7 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
         }
         
         glClear(GL_COLOR_BUFFER_BIT);
-        wr.render();
+        wr.render(wo);
         glfwSwapBuffers(win);
     }
 
