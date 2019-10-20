@@ -27,12 +27,13 @@ struct Player {
 class World {
 
 public:
-    World(double size, double dashTime, std::vector<Player>&& players);
+    World(double size, double dashTime, const std::vector<Player>& players);
+    World();
 
-    World(const World& other) = delete;
-    World& operator=(const World& other) = delete;
-    World(World&& other);
-    World& operator=(World&& other);
+    World(const World& other) = default;
+    World& operator=(const World& other) = default;
+    World(World&& other) = default;
+    World& operator=(World&& other) = default;
 
     void runFor(double secs, const std::vector<std::pair<int, CycleInput>>& inputs);
     const std::vector<Player>& players() const;

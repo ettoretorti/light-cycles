@@ -13,28 +13,18 @@
 
 namespace lcycle {
 
-World::World(double size, double dashTime, std::vector<Player>&& players)
-    : _players(players), _trails(_players.size()), _size(size),
-      _dashTime(dashTime), _curTime(0.0), _drawing(false)
+World::World()
+    : _players(), _trails(), _size(0.0), _dashTime(0.0),
+      _curTime(0.0), _drawing(false) {}
+
+World::World(double size, double dashTime, const std::vector<Player>& players)
+    : _players(players),
+      _trails(_players.size()), _size(size), _dashTime(dashTime),
+      _curTime(0.0), _drawing(false)
 {
     for(size_t i=0; i<_trails.size(); i++) {
         _trails[i].color() = _players[i].tColor;
     }
-}
-
-World::World(World&& o)
-    : _players(o._players), _trails(o._trails), _size(o._size),
-      _dashTime(o._dashTime), _curTime(o._curTime), _drawing(o._drawing)
-{}
-
-World& World::operator=(World&& o) {
-    _players = o._players;
-    _trails = o._trails;
-    _size = o._size;
-    _dashTime = o._dashTime;
-    _curTime = o._curTime;
-    _drawing = o._drawing;
-    return *this;
 }
 
 void World::runFor(double secs, const std::vector<std::pair<int, CycleInput>>& inputs) {

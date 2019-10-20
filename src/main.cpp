@@ -189,15 +189,15 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
         curAngle += anglePerPlayer;
         playerInputs.push_back(std::make_pair<int, CycleInput>(i, {}));
     }
-    
+
     const double WORLD_SIZE = 50.0;
-    World wo(WORLD_SIZE, 0.14, std::move(players));
+    World wo(WORLD_SIZE, 0.14, players);
     WorldRenderer wr;
 
     int w, h;
     glfwGetFramebufferSize(win, &w, &h);
     glViewport(0, 0, w, h);
-    
+
     mat4 mdl  = mathfu::mat4::Identity();
     glUniformMatrix4fv(p.getUniform("model"), 1, false, &mdl[0]);
 
