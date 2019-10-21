@@ -210,6 +210,8 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
 
     bool running  = false;
     bool pPressed = false;
+    constexpr double timePerFrame = 1.0 / 60.0;
+    double timeSinceLastFrame = 0.0;
     double time = glfwGetTime();
     while(!glfwWindowShouldClose(win)) {
         glfwPollEvents();
@@ -232,10 +234,16 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
 
 
         if(running) {
-            for(auto i = 0u; i < nPlayers; i++) {
-                playerInputs[i].second = INPUTS[i]();
+            timeSinceLastFrame += curTime - time;
+            if(timeSinceLastFrame >= 0.5 * timePerFrame) {
+                for(auto i = 0u; i < nPlayers; i++) {
+                    playerInputs[i].second = INPUTS[i]();
+                }
+                while(timeSinceLastFrame >= 0.5 * timePerFrame) {
+                    timeSinceLastFrame -= timePerFrame;
+                    wo.runFor(timePerFrame, playerInputs);
+                }
             }
-            wo.runFor(curTime - time, playerInputs);
         } else {
             glfwWaitEvents();
             curTime = glfwGetTime();
