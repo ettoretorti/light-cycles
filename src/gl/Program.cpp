@@ -1,6 +1,6 @@
 #include "Program.hpp"
 
-#include <GL/glew.h>
+#include <glad/glad.h>
 #include <string>
 
 #include <utility>

@@ -1,6 +1,6 @@
 
 #include "Buffer.hpp"
-#include <GL/glew.h>
+#include <glad/glad.h>
 
 #include <utility>
 
@@ -41,7 +41,7 @@ static void bufBind(GLenum target, GLuint name) {
 
 Buffer::Buffer(GLenum target) : name_(0), target_(target)
 {
-	if(GLEW_ARB_direct_state_access) {
+	if(GLAD_GL_ARB_direct_state_access) {
 		glCreateBuffers(1, &name_);
 	} else {
 		glGenBuffers(1, &name_);
@@ -67,7 +67,7 @@ GLenum& Buffer::target() {
 }
 
 Buffer::~Buffer() {
-	for (size_t i = 0; i < sizeof(curBufs) / sizeof(curBufs[0]); i++) {
+	for (auto i = 0u; i < sizeof(curBufs) / sizeof(curBufs[0]); i++) {
 		if (curBufs[i] == name_) {
 			curBufs[i] = 0;
 		}
@@ -80,7 +80,7 @@ void Buffer::bind() const {
 }
 
 void Buffer::data(GLsizeiptr size, const GLvoid* data, GLenum usage) {
-	if(GLEW_ARB_direct_state_access) {
+	if(GLAD_GL_ARB_direct_state_access) {
 		glNamedBufferData(name_, size, data, usage);
 		return;
 	}
@@ -92,7 +92,7 @@ void Buffer::data(GLsizeiptr size, const GLvoid* data, GLenum usage) {
 }
 
 void Buffer::subData(GLintptr offset, GLsizeiptr size, const GLvoid* data) {
-	if(GLEW_ARB_direct_state_access) {
+	if(GLAD_GL_ARB_direct_state_access) {
 		glNamedBufferSubData(name_, offset, size, data);
 		return;
 	}

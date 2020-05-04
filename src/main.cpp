@@ -1,5 +1,4 @@
-#include <GL/glew.h>
-#include <GL/gl.h>
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 #include <iostream>
@@ -80,18 +79,16 @@ GLFWwindow* init(int width, int height) {
 
     glfwMakeContextCurrent(win);
     glfwSwapInterval(1);  // vsync
-    glEnable(GL_MULTISAMPLE);
 
     // make sure we get what we want
-    glewExperimental = GL_TRUE;
-    GLenum glewErr = glewInit();
-    if(glewErr != GLEW_OK) {
+    if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         glfwDestroyWindow(win);
         return nullptr;
     }
+    glEnable(GL_MULTISAMPLE);
 
 #ifndef NDEBUG
-    if (GLEW_KHR_debug) {
+    if (GLAD_GL_KHR_debug) {
         glDebugMessageCallback(gl_error, nullptr);
         glEnable(GL_DEBUG_OUTPUT);
         std::cout << "Registered gl error callback" << std::endl;
@@ -313,35 +310,38 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    Shader vs(GL_VERTEX_SHADER);
-    vs.source(vshaderSrc);
-    if(!vs.compile()) {
-        cerr << "Could not compile vertex shader\n\n" << vs.infoLog() << endl;
-        return -1;
-    }
+    // OpenGL objects must not outlive window
+    {
+        Shader vs(GL_VERTEX_SHADER);
+        vs.source(vshaderSrc);
+        if(!vs.compile()) {
+            cerr << "Could not compile vertex shader\n\n" << vs.infoLog() << endl;
+            return -1;
+        }
 
-    Shader fs(GL_FRAGMENT_SHADER);
-    fs.source(fshaderSrc);
-    if(!fs.compile()) {
-        cerr << "Could not compile fragment shader\n\n" << fs.infoLog() << endl;
-        return -1;
-    }
+        Shader fs(GL_FRAGMENT_SHADER);
+        fs.source(fshaderSrc);
+        if(!fs.compile()) {
+            cerr << "Could not compile fragment shader\n\n" << fs.infoLog() << endl;
+            return -1;
+        }
 
-    Program p;
-    p.setVertexShader(vs);
-    p.setFragmentShader(fs);
-    p.bindAttrib(0, "pos");
-    p.bindAttrib(1, "color");
-    if(!p.link()) {
-        cerr << "Could not link program\n\n" << p.infoLog() << endl;
-        return -1;
-    }
-    p.use();
+        Program p;
+        p.setVertexShader(vs);
+        p.setFragmentShader(fs);
+        p.bindAttrib(0, "pos");
+        p.bindAttrib(1, "color");
+        if(!p.link()) {
+            cerr << "Could not link program\n\n" << p.infoLog() << endl;
+            return -1;
+        }
+        p.use();
 
-    try {
-        while(mainloop(win, p, 2));
-    } catch(exception& ex) {
-        cerr << ex.what() << endl;
+        try {
+            while(mainloop(win, p, 2));
+        } catch(exception& ex) {
+            cerr << ex.what() << endl;
+        }
     }
 
     glfwDestroyWindow(win);

@@ -4,7 +4,6 @@ project (lcycles)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-find_package(GLEW REQUIRED)
 find_package(OpenGL REQUIRED)
 
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
@@ -27,7 +26,6 @@ target_include_directories(lcycles
                            PRIVATE ${CMAKE_SOURCE_DIR}/src
                            PRIVATE ${CMAKE_SOURCE_DIR}/include
                            PRIVATE ${GLFW_INCLUDE_DIRS}
-                           PRIVATE ${GLEW_INCLUDE_DIRS}
                            PRIVATE ${GL_INCLUDE_DIRS})
 
 target_compile_options(lcycles
@@ -43,5 +41,4 @@ endif()
 target_link_libraries(lcycles
                       glfw
                       ${GLFW_LIBRARIES}
-                      ${GLEW_LIBRARIES}
                       ${OPENGL_LIBRARIES})

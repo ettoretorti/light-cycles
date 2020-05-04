@@ -1,6 +1,6 @@
 
 #include "VArray.hpp"
-#include <GL/glew.h>
+#include <glad/glad.h>
 #include <utility>
 
 namespace gl {
@@ -16,7 +16,7 @@ static void vaoBind(GLuint name) {
 
 VArray::VArray() : name_(0)
 {
-	if(GLEW_ARB_direct_state_access) {
+	if(GLAD_GL_ARB_direct_state_access) {
 		glCreateVertexArrays(1, &name_);
 	} else {
 		glGenVertexArrays(1, &name_);
@@ -45,7 +45,7 @@ void VArray::bind() const {
 }
 
 void VArray::enableVertexAttrib(GLuint index) {
-	if(GLEW_ARB_direct_state_access) {
+	if(GLAD_GL_ARB_direct_state_access) {
 		glEnableVertexArrayAttrib(name_, index);
 		return;
 	}
@@ -55,7 +55,7 @@ void VArray::enableVertexAttrib(GLuint index) {
 }
 
 void VArray::disableVertexAttrib(GLuint index) {
-	if(GLEW_ARB_direct_state_access) {
+	if(GLAD_GL_ARB_direct_state_access) {
 		glDisableVertexArrayAttrib(name_, index);
 		return;
 	}
