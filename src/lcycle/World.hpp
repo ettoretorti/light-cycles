@@ -25,8 +25,9 @@ struct Player {
 
 
 class World {
-
 public:
+    using PlayerInputs = std::vector<std::pair<int, CycleInput>>;
+
     World(double size, double dashTime, const std::vector<Player>& players);
     World();
 
@@ -35,7 +36,7 @@ public:
     World(World&& other) = default;
     World& operator=(World&& other) = default;
 
-    void runFor(double secs, const std::vector<std::pair<int, CycleInput>>& inputs);
+    void runFor(double secs, const PlayerInputs& inputs);
     const std::vector<Player>& players() const;
     const std::vector<Trail>& trails() const;
     double size() const;
