@@ -15,6 +15,7 @@
 
 #include "lcycle/World.hpp"
 #include "lcycle/Cycle.hpp"
+#include "lcycle/RollbackWorld.hpp"
 
 #include "gfx/WorldRenderer.hpp"
 
@@ -188,9 +189,9 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
     }
 
     const double WORLD_SIZE = 50.0;
-    World wo(WORLD_SIZE, 0.14, players);
     WorldRenderer wr;
-
+    RollbackWorld rbw(World(WORLD_SIZE, 0.14, players));
+;
     int w, h;
     glfwGetFramebufferSize(win, &w, &h);
     glViewport(0, 0, w, h);
@@ -207,6 +208,7 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
 
     bool running  = false;
     bool pPressed = false;
+    bool bPressed = false;
     constexpr double timePerFrame = 1.0 / 60.0;
     double timeSinceLastFrame = 0.0;
     double time = glfwGetTime();
@@ -215,11 +217,11 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
         double curTime = glfwGetTime();
 
         if(glfwGetKey(win, GLFW_KEY_ESCAPE)) { break; }
-        if(wo.players().size() == 1) {
-            std::cout << "The winner is: " << wo.players()[0].name << std::endl;
+        if(rbw.latest()->players().size() == 1) {
+            std::cout << "The winner is: " << rbw.latest()->players()[0].name << std::endl;
             running = false;
             break;
-        } else if(wo.players().size() == 0) {
+        } else if(rbw.latest()->players().size() == 0) {
             std::cout << "Draw" << std::endl;
             running = false;
             break;
@@ -228,6 +230,13 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
         bool pNow = glfwGetKey(win, GLFW_KEY_P);
         if(!pPressed && pNow) running = !running;
         pPressed = pNow;
+
+        bool bNow = glfwGetKey(win, GLFW_KEY_B);
+        if(!bPressed && bNow) {
+            rbw.rollback(30);
+            std::cout << "r-r-rollback" << std::endl;
+        }
+        bPressed = bNow;
 
 
         if(running) {
@@ -238,7 +247,7 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
                 }
                 while(timeSinceLastFrame >= 0.5 * timePerFrame) {
                     timeSinceLastFrame -= timePerFrame;
-                    wo.runFor(timePerFrame, playerInputs);
+                    rbw.advance(playerInputs);
                 }
             }
         } else {
@@ -259,7 +268,7 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
         }
 
         glClear(GL_COLOR_BUFFER_BIT);
-        wr.render(wo);
+        wr.render(*rbw.latest());
         glfwSwapBuffers(win);
     }
 
@@ -279,7 +288,7 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
         }
 
         glClear(GL_COLOR_BUFFER_BIT);
-        wr.render(wo);
+        wr.render(*rbw.latest());
         glfwSwapBuffers(win);
     }
 
