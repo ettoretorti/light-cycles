@@ -191,7 +191,7 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
     const double WORLD_SIZE = 50.0;
     WorldRenderer wr;
     RollbackWorld rbw(World(WORLD_SIZE, 0.14, players));
-;
+
     int w, h;
     glfwGetFramebufferSize(win, &w, &h);
     glViewport(0, 0, w, h);
