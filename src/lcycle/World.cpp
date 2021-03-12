@@ -49,7 +49,7 @@ void World::runFor(double secs, const std::vector<std::pair<int, CycleInput>>& i
     }
 
     _curTime += secs;
-    if(_drawing && _curTime > 2 * _dashTime) {
+    if(_drawing && _curTime >= 2 * _dashTime) {
         _drawing = false;
     } else if(_drawing) {
         for(const auto& input : adjustedInputs) {
