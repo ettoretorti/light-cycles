@@ -21,7 +21,7 @@
 
 #include "gfx/WorldRenderer.hpp"
 
-const char* vshaderSrc =
+constexpr char vshaderSrc[] =
     "#version 330\n"
     ""
     "uniform mat4 model;\n"
@@ -37,7 +37,7 @@ const char* vshaderSrc =
     "  fColor = color;\n"
     "}\n";
 
-const char* fshaderSrc =
+constexpr char fshaderSrc[] =
     "#version 330\n"
     ""
     "in vec4 fColor;\n"
@@ -55,6 +55,7 @@ void glfw_error(int error, const char* msg) {
 
 #ifndef NDEBUG
 void APIENTRY gl_error(GLenum src, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* msg, const void* uParam) {
+    (void) src; (void) type; (void) id; (void) severity; (void) length; (void) uParam;
     std::cerr << msg << std::endl;
 }
 #endif
@@ -64,14 +65,15 @@ struct WindowState {
 };
 
 void glfwKeyCallback(GLFWwindow* win, int key, int scancode, int action, int mods) {
-        if (key == GLFW_KEY_UNKNOWN) return;
+    (void) scancode; (void) mods;
+    if (key == GLFW_KEY_UNKNOWN) return;
 
-        auto* winState = static_cast<WindowState*>(glfwGetWindowUserPointer(win));
-        if (action == GLFW_PRESS) {
-                winState->keys.updateState(key, true);
-        } else if (action == GLFW_RELEASE) {
-                winState->keys.updateState(key, false);
-        }
+    auto* winState = static_cast<WindowState*>(glfwGetWindowUserPointer(win));
+    if (action == GLFW_PRESS) {
+            winState->keys.updateState(key, true);
+    } else if (action == GLFW_RELEASE) {
+            winState->keys.updateState(key, false);
+    }
 }
 
 /*!
