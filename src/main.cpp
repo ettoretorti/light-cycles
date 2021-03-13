@@ -13,6 +13,8 @@
 #include "gl/Shader.hpp"
 #include "gl/Program.hpp"
 
+#include "input/KeyState.hpp"
+
 #include "lcycle/World.hpp"
 #include "lcycle/Cycle.hpp"
 #include "lcycle/RollbackWorld.hpp"
@@ -56,6 +58,21 @@ void APIENTRY gl_error(GLenum src, GLenum type, GLuint id, GLenum severity, GLsi
     std::cerr << msg << std::endl;
 }
 #endif
+
+struct WindowState {
+        input::KeyState keys;
+};
+
+void glfwKeyCallback(GLFWwindow* win, int key, int scancode, int action, int mods) {
+        if (key == GLFW_KEY_UNKNOWN) return;
+
+        auto* winState = static_cast<WindowState*>(glfwGetWindowUserPointer(win));
+        if (action == GLFW_PRESS) {
+                winState->keys.updateState(key, true);
+        } else if (action == GLFW_RELEASE) {
+                winState->keys.updateState(key, false);
+        }
+}
 
 /*!
  * Preconditions
@@ -104,11 +121,12 @@ void shutdown() {
 }
 
 std::function<lcycle::CycleInput()> mkInputFunc(GLFWwindow* win, int lKey, int rKey) {
-    return [win, lKey, rKey]() -> lcycle::CycleInput {
-        bool l = glfwGetKey(win, lKey);
-        bool r = glfwGetKey(win, rKey);
+    const auto* ws = static_cast<WindowState*>(glfwGetWindowUserPointer(win));
+    return [ws, lKey, rKey]() -> lcycle::CycleInput {
+        bool l = ws->keys.isPressed(lKey);
+        bool r = ws->keys.isPressed(rKey);
 
-	return {(float)(-l + r)};
+        return {(float)(-l + r)};
     };
 }
 
@@ -174,6 +192,8 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
         throw std::range_error("Maximum " + std::to_string(MAX_PLAYERS) + " players allowed");
     }
 
+    auto* windowState = static_cast<WindowState*>(glfwGetWindowUserPointer(win));
+
     std::vector<Player> players;
     players.reserve(nPlayers);
     std::vector<std::pair<int, CycleInput>> playerInputs;
@@ -207,8 +227,6 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
 
 
     bool running  = false;
-    bool pPressed = false;
-    bool bPressed = false;
     constexpr double timePerFrame = 1.0 / 60.0;
     double timeSinceLastFrame = 0.0;
     double time = glfwGetTime();
@@ -216,7 +234,7 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
         glfwPollEvents();
         double curTime = glfwGetTime();
 
-        if(glfwGetKey(win, GLFW_KEY_ESCAPE)) { break; }
+        if(windowState->keys.isPressed(GLFW_KEY_ESCAPE)) { break; }
         if(rbw.latest()->players().size() == 1) {
             std::cout << "The winner is: " << rbw.latest()->players()[0].name << std::endl;
             running = false;
@@ -227,16 +245,14 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
             break;
         }
 
-        bool pNow = glfwGetKey(win, GLFW_KEY_P);
-        if(!pPressed && pNow) running = !running;
-        pPressed = pNow;
+        if(windowState->keys.isPosEdge(GLFW_KEY_P)) {
+            running = !running;
+        }
 
-        bool bNow = glfwGetKey(win, GLFW_KEY_B);
-        if(!bPressed && bNow) {
+        if(windowState->keys.isPosEdge(GLFW_KEY_V)) {
             rbw.rollback(30);
             std::cout << "r-r-rollback" << std::endl;
         }
-        bPressed = bNow;
 
 
         if(running) {
@@ -250,7 +266,9 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
                     rbw.advance(playerInputs);
                 }
             }
+            windowState->keys.step();
         } else {
+            windowState->keys.step();
             glfwWaitEvents();
             curTime = glfwGetTime();
         }
@@ -273,7 +291,7 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
     }
 
     bool rematch = false;
-    while(!running && !glfwWindowShouldClose(win) && !glfwGetKey(win, GLFW_KEY_ESCAPE) && !(rematch = glfwGetKey(win, GLFW_KEY_R))) {
+    while(!glfwWindowShouldClose(win) && !windowState->keys.isPressed(GLFW_KEY_ESCAPE) && !(rematch = windowState->keys.isPressed(GLFW_KEY_R))) {
         glfwWaitEvents();
 
         int nW, nH;
@@ -345,6 +363,10 @@ int main(int argc, char** argv) {
             return -1;
         }
         p.use();
+
+        WindowState ws;
+        glfwSetWindowUserPointer(win, &ws);
+        glfwSetKeyCallback(win, glfwKeyCallback);
 
         try {
             while(mainloop(win, p, 2));
