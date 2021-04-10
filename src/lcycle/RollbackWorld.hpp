@@ -9,6 +9,7 @@ namespace lcycle {
 class RollbackWorld {
 public:
     RollbackWorld(const World& w);
+    RollbackWorld();
 
     World* latest();
     bool rollback(int frames);

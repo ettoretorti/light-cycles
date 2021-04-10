@@ -12,6 +12,8 @@ RollbackWorld::RollbackWorld(const World& w): _buf() {
     }
 }
 
+RollbackWorld::RollbackWorld(): RollbackWorld::RollbackWorld(World()) {}
+
 World* RollbackWorld::latest() { return _buf.tail(); }
 
 bool RollbackWorld::rollback(int frames) {
