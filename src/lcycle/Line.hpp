@@ -2,11 +2,10 @@
 
 #include <mathfu/glsl_mappings.h>
 
-
 namespace lcycle {
 
 class Line {
-public:
+   public:
     Line(const mathfu::vec2& start, const mathfu::vec2& end);
     Line(const Line& other);
     Line& operator=(const Line& other);
@@ -22,8 +21,9 @@ public:
     double lenSquared() const;
 
     static bool intersect(const Line& a, const Line& b);
-private:
+
+   private:
     mathfu::vec2 _s, _e;
 };
 
-}
+}  // namespace lcycle

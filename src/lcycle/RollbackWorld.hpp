@@ -1,13 +1,12 @@
 #pragma once
 
-#include "util/CircularBuffer.hpp"
 #include "lcycle/World.hpp"
-
+#include "util/CircularBuffer.hpp"
 
 namespace lcycle {
 
 class RollbackWorld {
-public:
+   public:
     RollbackWorld(const World& w);
     RollbackWorld();
 
@@ -15,8 +14,8 @@ public:
     bool rollback(int frames);
     void advance(const World::PlayerInputs& inputs);
 
-private:
+   private:
     util::CircularBuffer<World, 64> _buf;
 };
 
-}
+}  // namespace lcycle

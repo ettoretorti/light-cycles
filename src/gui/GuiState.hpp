@@ -2,17 +2,19 @@
 
 #include "gui/nuklear.h"
 
+// clang-format off
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+// clang-format on
 
 #include "gl/Buffer.hpp"
-#include "gl/VArray.hpp"
 #include "gl/Program.hpp"
+#include "gl/VArray.hpp"
 
 namespace gui {
 
 class GuiState {
-public:
+   public:
     GuiState();
     ~GuiState();
 
@@ -23,7 +25,8 @@ public:
 
     nk_context ctx;
     bool active;
-private:
+
+   private:
     nk_font_atlas _atlas;
     nk_draw_null_texture _null;
     nk_buffer _cmdbuf, _vbuf, _ebuf;
@@ -34,4 +37,4 @@ private:
     GLuint _fontTexture;
 };
 
-}
+}  // namespace gui

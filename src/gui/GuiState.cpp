@@ -2,15 +2,17 @@
 
 #include <stdexcept>
 
+// clang-format off
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+// clang-format on
 
 #include <mathfu/glsl_mappings.h>
 
 #include "gl/Buffer.hpp"
-#include "gl/VArray.hpp"
 #include "gl/Program.hpp"
 #include "gl/Shader.hpp"
+#include "gl/VArray.hpp"
 #include "gui/nuklear.h"
 
 namespace {
@@ -41,7 +43,6 @@ constexpr char kVertexShader[] = R"glsl(
     }
 )glsl";
 
-
 constexpr char kFragmentShader[] = R"glsl(
     #version 330
     uniform  sampler2D tex;
@@ -63,7 +64,7 @@ GLuint createFontTexture(const void* data, int w, int h) {
     return texture;
 }
 
-}
+}  // namespace
 
 namespace gui {
 
@@ -112,10 +113,11 @@ GuiState::GuiState()
     _vao.enableVertexAttrib(kColorAttribIdx);
 
     _vbo.bind();
-    _vao.vertexAttribPointer(kPosAttribIdx, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)offsetof(VertexData, pos));
+    _vao.vertexAttribPointer(kPosAttribIdx, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData),
+                             (void*)offsetof(VertexData, pos));
     _vao.vertexAttribPointer(kUvAttribIdx, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)offsetof(VertexData, uv));
-    _vao.vertexAttribPointer(kColorAttribIdx, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(VertexData), (void*)offsetof(VertexData, col));
-    
+    _vao.vertexAttribPointer(kColorAttribIdx, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(VertexData),
+                             (void*)offsetof(VertexData, col));
 }
 
 GuiState::~GuiState() {
@@ -127,13 +129,9 @@ GuiState::~GuiState() {
     glDeleteTextures(1, &_fontTexture);
 }
 
-void GuiState::startInput() {
-    nk_input_begin(&ctx);
-}
+void GuiState::startInput() { nk_input_begin(&ctx); }
 
-void GuiState::endInput() {
-    nk_input_end(&ctx);
-}
+void GuiState::endInput() { nk_input_end(&ctx); }
 
 void GuiState::render(GLFWwindow* win) {
     constexpr nk_draw_vertex_layout_element vertex_layout[] = {
@@ -151,18 +149,16 @@ void GuiState::render(GLFWwindow* win) {
     cfg.vertex_layout = vertex_layout;
     cfg.vertex_size = sizeof(VertexData);
     cfg.vertex_alignment = alignof(VertexData);
-    
-    if (nk_convert(&ctx, &_cmdbuf, &_vbuf, &_ebuf, &cfg) != NK_CONVERT_SUCCESS)  {
+
+    if (nk_convert(&ctx, &_cmdbuf, &_vbuf, &_ebuf, &cfg) != NK_CONVERT_SUCCESS) {
         throw new std::runtime_error("Failed to convert gui display lists to vertex data");
     }
-
 
     _vbo.data(_vbuf.allocated, nullptr, GL_STREAM_DRAW);
     _vbo.subData(0, _vbuf.allocated, nk_buffer_memory(&_vbuf));
 
     _ebo.data(_ebuf.allocated, nullptr, GL_STREAM_DRAW);
     _ebo.subData(0, _ebuf.allocated, nk_buffer_memory(&_ebuf));
-
 
     int w, h;
     glfwGetFramebufferSize(win, &w, &h);
@@ -186,7 +182,6 @@ void GuiState::render(GLFWwindow* win) {
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_SCISSOR_TEST);
 
-
     const nk_draw_command* cmd;
     const nk_draw_index* offset = nullptr;
     nk_draw_foreach(cmd, &ctx, &_cmdbuf) {
@@ -202,11 +197,10 @@ void GuiState::render(GLFWwindow* win) {
     glDisable(GL_BLEND);
     glDisable(GL_SCISSOR_TEST);
 
-    
     nk_clear(&ctx);
     nk_buffer_clear(&_cmdbuf);
     nk_buffer_clear(&_vbuf);
     nk_buffer_clear(&_ebuf);
 }
 
-}
+}  // namespace gui

@@ -1,15 +1,14 @@
 #pragma once
 
-#include <vector>
 #include <functional>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include <mathfu/glsl_mappings.h>
 
 #include "Cycle.hpp"
 #include "Trail.hpp"
-
 
 namespace lcycle {
 
@@ -23,9 +22,8 @@ struct Player {
     Color tColor;
 };
 
-
 class World {
-public:
+   public:
     using PlayerInputs = std::vector<std::pair<int, CycleInput>>;
 
     World(double size, double dashTime, const std::vector<Player>& players);
@@ -41,7 +39,7 @@ public:
     const std::vector<Trail>& trails() const;
     double size() const;
 
-private:
+   private:
     std::vector<Player> _players;
     std::vector<Trail> _trails;
     double _size;
@@ -50,4 +48,4 @@ private:
     bool _drawing;
 };
 
-}
+}  // namespace lcycle

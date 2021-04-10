@@ -1,28 +1,30 @@
+// clang-format off
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+// clang-format on
 
 #include <iostream>
-#include <string>
 #include <stdexcept>
+#include <string>
 
 #include <mathfu/glsl_mappings.h>
 #include <mathfu/quaternion.h>
 
 #include "gl/Buffer.hpp"
-#include "gl/VArray.hpp"
-#include "gl/Shader.hpp"
 #include "gl/Program.hpp"
+#include "gl/Shader.hpp"
+#include "gl/VArray.hpp"
 
 #include "input/KeyState.hpp"
 
-#include "lcycle/World.hpp"
 #include "lcycle/Cycle.hpp"
 #include "lcycle/RollbackWorld.hpp"
+#include "lcycle/World.hpp"
 
 #include "gfx/WorldRenderer.hpp"
 
-#include "gui/nuklear.h"
 #include "gui/GuiState.hpp"
+#include "gui/nuklear.h"
 
 constexpr char vshaderSrc[] =
     "#version 330\n"
@@ -58,40 +60,65 @@ void glfw_error(int error, const char* msg) {
 }
 
 #ifndef NDEBUG
-void APIENTRY gl_error(GLenum src, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* msg, const void* uParam) {
-    (void) id; (void) length; (void) uParam;
+void APIENTRY gl_error(GLenum src, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* msg,
+                       const void* uParam) {
+    (void)id;
+    (void)length;
+    (void)uParam;
     auto srcToStr = [=]() -> const char* {
         switch (src) {
-            case GL_DEBUG_SOURCE_API: return "SOURCE_API";
-            case GL_DEBUG_SOURCE_WINDOW_SYSTEM: return "WINDOW_SYSTEM";
-            case GL_DEBUG_SOURCE_SHADER_COMPILER: return "SHADER_COMPILER";
-            case GL_DEBUG_SOURCE_THIRD_PARTY: return "THIRD_PARTY";
-            case GL_DEBUG_SOURCE_APPLICATION: return "APPLICATION";
-            case GL_DEBUG_SOURCE_OTHER: return "OTHER";
-            default: return "UNKNOWN";
+            case GL_DEBUG_SOURCE_API:
+                return "SOURCE_API";
+            case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+                return "WINDOW_SYSTEM";
+            case GL_DEBUG_SOURCE_SHADER_COMPILER:
+                return "SHADER_COMPILER";
+            case GL_DEBUG_SOURCE_THIRD_PARTY:
+                return "THIRD_PARTY";
+            case GL_DEBUG_SOURCE_APPLICATION:
+                return "APPLICATION";
+            case GL_DEBUG_SOURCE_OTHER:
+                return "OTHER";
+            default:
+                return "UNKNOWN";
         }
     };
     auto typeToStr = [=]() -> const char* {
         switch (type) {
-            case GL_DEBUG_TYPE_ERROR: return "ERROR";
-            case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: return "DEPRECATED_BEHAVIOR";
-            case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR: return "UNDEFINED_BEHAVIOR";
-            case GL_DEBUG_TYPE_PORTABILITY: return "PORTABILITY";
-            case GL_DEBUG_TYPE_PERFORMANCE: return "PERFORMANCE";
-            case GL_DEBUG_TYPE_MARKER: return "MARKER";
-            case GL_DEBUG_TYPE_PUSH_GROUP: return "PUSH_GROUP";
-            case GL_DEBUG_TYPE_POP_GROUP: return "POP_GROUP";
-            case GL_DEBUG_TYPE_OTHER: return "OTHER";
-            default: return "UNKNOWN";
+            case GL_DEBUG_TYPE_ERROR:
+                return "ERROR";
+            case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+                return "DEPRECATED_BEHAVIOR";
+            case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+                return "UNDEFINED_BEHAVIOR";
+            case GL_DEBUG_TYPE_PORTABILITY:
+                return "PORTABILITY";
+            case GL_DEBUG_TYPE_PERFORMANCE:
+                return "PERFORMANCE";
+            case GL_DEBUG_TYPE_MARKER:
+                return "MARKER";
+            case GL_DEBUG_TYPE_PUSH_GROUP:
+                return "PUSH_GROUP";
+            case GL_DEBUG_TYPE_POP_GROUP:
+                return "POP_GROUP";
+            case GL_DEBUG_TYPE_OTHER:
+                return "OTHER";
+            default:
+                return "UNKNOWN";
         }
     };
     auto sevToStr = [=]() -> const char* {
         switch (severity) {
-            case GL_DEBUG_SEVERITY_HIGH: return "HIGH";
-            case GL_DEBUG_SEVERITY_MEDIUM: return "MEDIUM";
-            case GL_DEBUG_SEVERITY_LOW: return "LOW";
-            case GL_DEBUG_SEVERITY_NOTIFICATION: return "NOTIFICATION";
-            default: return "UNKNOWN";
+            case GL_DEBUG_SEVERITY_HIGH:
+                return "HIGH";
+            case GL_DEBUG_SEVERITY_MEDIUM:
+                return "MEDIUM";
+            case GL_DEBUG_SEVERITY_LOW:
+                return "LOW";
+            case GL_DEBUG_SEVERITY_NOTIFICATION:
+                return "NOTIFICATION";
+            default:
+                return "UNKNOWN";
         }
     };
     std::cerr << "[GL_" << srcToStr() << "][" << typeToStr() << "][" << sevToStr() << "]: " << msg << std::endl;
@@ -109,28 +136,44 @@ void glfwUpdateNkMouse(GLFWwindow* win, nk_context* ctx) {
     glfwGetCursorPos(win, &x, &y);
     nk_input_motion(ctx, (int)x, (int)y);
     nk_input_button(ctx, NK_BUTTON_LEFT, (int)x, (int)y, glfwGetMouseButton(win, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
-    nk_input_button(ctx, NK_BUTTON_MIDDLE, (int)x, (int)y, glfwGetMouseButton(win, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS);
-    nk_input_button(ctx, NK_BUTTON_RIGHT, (int)x, (int)y, glfwGetMouseButton(win, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS);
+    nk_input_button(ctx, NK_BUTTON_MIDDLE, (int)x, (int)y,
+                    glfwGetMouseButton(win, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS);
+    nk_input_button(ctx, NK_BUTTON_RIGHT, (int)x, (int)y,
+                    glfwGetMouseButton(win, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS);
 }
 
 nk_keys glfwKeyToNkKey(int key) {
-    switch(key) {
-        case GLFW_KEY_LEFT_SHIFT: case GLFW_KEY_RIGHT_SHIFT: return NK_KEY_SHIFT;
-        case GLFW_KEY_LEFT_CONTROL: case GLFW_KEY_RIGHT_CONTROL: return NK_KEY_CTRL;
-        case GLFW_KEY_DELETE: return NK_KEY_DEL;
-        case GLFW_KEY_ENTER: return NK_KEY_ENTER;
-        case GLFW_KEY_TAB: return NK_KEY_TAB;
-        case GLFW_KEY_BACKSPACE: return NK_KEY_BACKSPACE;
-        case GLFW_KEY_UP: return NK_KEY_UP;
-        case GLFW_KEY_DOWN: return NK_KEY_DOWN;
-        case GLFW_KEY_LEFT: return NK_KEY_LEFT;
-        case GLFW_KEY_RIGHT: return NK_KEY_RIGHT;
-        default: return NK_KEY_NONE;
+    switch (key) {
+        case GLFW_KEY_LEFT_SHIFT:
+        case GLFW_KEY_RIGHT_SHIFT:
+            return NK_KEY_SHIFT;
+        case GLFW_KEY_LEFT_CONTROL:
+        case GLFW_KEY_RIGHT_CONTROL:
+            return NK_KEY_CTRL;
+        case GLFW_KEY_DELETE:
+            return NK_KEY_DEL;
+        case GLFW_KEY_ENTER:
+            return NK_KEY_ENTER;
+        case GLFW_KEY_TAB:
+            return NK_KEY_TAB;
+        case GLFW_KEY_BACKSPACE:
+            return NK_KEY_BACKSPACE;
+        case GLFW_KEY_UP:
+            return NK_KEY_UP;
+        case GLFW_KEY_DOWN:
+            return NK_KEY_DOWN;
+        case GLFW_KEY_LEFT:
+            return NK_KEY_LEFT;
+        case GLFW_KEY_RIGHT:
+            return NK_KEY_RIGHT;
+        default:
+            return NK_KEY_NONE;
     }
 }
 
 void glfwKeyCallback(GLFWwindow* win, int key, int scancode, int action, int mods) {
-    (void) scancode; (void) mods;
+    (void)scancode;
+    (void)mods;
     if (key == GLFW_KEY_UNKNOWN) return;
 
     auto* winState = static_cast<WindowState*>(glfwGetWindowUserPointer(win));
@@ -154,7 +197,7 @@ void glfwKeyCallback(GLFWwindow* win, int key, int scancode, int action, int mod
 GLFWwindow* init(int width, int height) {
     glfwSetErrorCallback(glfw_error);
 
-    if(!glfwInit()) return nullptr;
+    if (!glfwInit()) return nullptr;
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -167,7 +210,7 @@ GLFWwindow* init(int width, int height) {
     glfwSwapInterval(1);  // vsync
 
     // make sure we get what we want
-    if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         glfwDestroyWindow(win);
         return nullptr;
     }
@@ -184,9 +227,7 @@ GLFWwindow* init(int width, int height) {
     return win;
 }
 
-void shutdown() {
-    glfwTerminate();
-}
+void shutdown() { glfwTerminate(); }
 
 std::function<lcycle::CycleInput()> mkInputFunc(GLFWwindow* win, int lKey, int rKey) {
     const auto* ws = static_cast<WindowState*>(glfwGetWindowUserPointer(win));
@@ -200,23 +241,23 @@ std::function<lcycle::CycleInput()> mkInputFunc(GLFWwindow* win, int lKey, int r
 
 std::function<lcycle::CycleInput()> jsInputFunc(int joystick, int axis) {
     return [joystick, axis]() -> lcycle::CycleInput {
-            int count;
-            float val = glfwGetJoystickAxes(joystick, &count)[axis];
-            if (val < 0.15 && val > -0.15) {
-                    val = 0;
-            }
-            return {val};
+        int count;
+        float val = glfwGetJoystickAxes(joystick, &count)[axis];
+        if (val < 0.15 && val > -0.15) {
+            val = 0;
+        }
+        return {val};
     };
 }
 
 mathfu::mat4 projection(int winWidth, int winHeight, double worldSize) {
     double side = worldSize * 3.0 / 5.0;
 
-    if(winWidth >= winHeight) {
-        double ratio = winWidth / (double) winHeight;
+    if (winWidth >= winHeight) {
+        double ratio = winWidth / (double)winHeight;
         return mathfu::mat4::Ortho(-side * ratio, side * ratio, -side, side, 0.1, 2.0);
     } else {
-        double ratio = winHeight / (double) winWidth;
+        double ratio = winHeight / (double)winWidth;
         return mathfu::mat4::Ortho(-side, side, -side * ratio, side * ratio, 0.1, 2.0);
     }
 }
@@ -252,43 +293,41 @@ void replay(GLFWwindow* win, gl::Program& p, ReplayState s) {
     s.replayFrame = 0;
     s.replaySpeed = 1.0;
 
-
     p.use();
-    mat4 mdl  = mathfu::mat4::Identity();
+    mat4 mdl = mathfu::mat4::Identity();
     glUniformMatrix4fv(p.getUniform("model"), 1, false, &mdl[0]);
 
-    mat4 view = mathfu::mat4::LookAt(mathfu::vec3(0.0), mathfu::vec3(0.0, 0.0, 1.0),
-                                     mathfu::vec3(0.0, 1.0, 0.0), 1.0);
+    mat4 view = mathfu::mat4::LookAt(mathfu::vec3(0.0), mathfu::vec3(0.0, 0.0, 1.0), mathfu::vec3(0.0, 1.0, 0.0), 1.0);
     bool exit = false;
     while (!exit && !glfwWindowShouldClose(win)) {
         ws->keys.step();
         if (ws->gui.active) {
-          ws->gui.startInput();
+            ws->gui.startInput();
         }
         glfwPollEvents();
         if (ws->gui.active) {
-          glfwUpdateNkMouse(win, &ws->gui.ctx);
-          ws->gui.endInput();
+            glfwUpdateNkMouse(win, &ws->gui.ctx);
+            ws->gui.endInput();
         }
 
         double curTime = glfwGetTime();
-        if(s.running) {
+        if (s.running) {
             timeSinceLastFrame += s.replaySpeed * (curTime - time);
         }
         time = curTime;
 
         glfwGetFramebufferSize(win, &w, &h);
 
-        if(ws->keys.isPressed(GLFW_KEY_ESCAPE)) {
+        if (ws->keys.isPressed(GLFW_KEY_ESCAPE)) {
             exit = true;
         }
-        if(ws->keys.isPosEdge(GLFW_KEY_P)) {
+        if (ws->keys.isPosEdge(GLFW_KEY_P)) {
             s.running = !s.running;
         }
 
         // Update game
-        if(timeSinceLastFrame >= 0.5 * kTimePerFrame) {
-            while(timeSinceLastFrame >= 0.5 * kTimePerFrame && s.replayFrame < s.replayInputs.size()) {
+        if (timeSinceLastFrame >= 0.5 * kTimePerFrame) {
+            while (timeSinceLastFrame >= 0.5 * kTimePerFrame && s.replayFrame < s.replayInputs.size()) {
                 timeSinceLastFrame -= kTimePerFrame;
                 s.world.runFor(kTimePerFrame, s.replayInputs[s.replayFrame]);
                 s.replayFrame++;
@@ -297,7 +336,7 @@ void replay(GLFWwindow* win, gl::Program& p, ReplayState s) {
 
         // Update UI
         if (ws->gui.active) {
-          auto* ctx = &ws->gui.ctx;
+            auto* ctx = &ws->gui.ctx;
         }
 
         glViewport(0, 0, w, h);
@@ -312,7 +351,7 @@ void replay(GLFWwindow* win, gl::Program& p, ReplayState s) {
 
         // Render UI
         if (ws->gui.active) {
-          ws->gui.render(win);
+            ws->gui.render(win);
         }
         ws->gui.active = !s.running;
         glfwSwapBuffers(win);
@@ -333,10 +372,10 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
     };
 
     const vec4 T_COLORS[] = {
-        vec4(1.0, 0.4, 0.4, 1.0),  // red
-        vec4(0.0, 0.75, 1.0, 1.0), // blue
-        vec4(1.0, 1.0, 0.5, 1.0),  // yellow
-        vec4(0.6, 1.0, 0.5, 1.0),  // green
+        vec4(1.0, 0.4, 0.4, 1.0),   // red
+        vec4(0.0, 0.75, 1.0, 1.0),  // blue
+        vec4(1.0, 1.0, 0.5, 1.0),   // yellow
+        vec4(0.6, 1.0, 0.5, 1.0),   // green
     };
 
     const std::function<CycleInput()> INPUTS[] = {
@@ -354,13 +393,13 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
     };
 
     const size_t MAX_PLAYERS = sizeof(P_COLORS) / sizeof(P_COLORS[0]);
-    if(nPlayers > MAX_PLAYERS) {
+    if (nPlayers > MAX_PLAYERS) {
         throw std::range_error("Maximum " + std::to_string(MAX_PLAYERS) + " players allowed");
     }
 
     auto* windowState = static_cast<WindowState*>(glfwGetWindowUserPointer(win));
     GameState gs;
-    for(auto i = 0u; i < nPlayers; i++) {
+    for (auto i = 0u; i < nPlayers; i++) {
         gs.inputs.push_back(INPUTS[i]);
     }
 
@@ -372,9 +411,9 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
         std::vector<Player> players;
         players.reserve(nPlayers);
 
-        const double anglePerPlayer = 2*3.14159 / nPlayers;
+        const double anglePerPlayer = 2 * 3.14159 / nPlayers;
         double curAngle = 0.0;
-        for(size_t i = 0; i < nPlayers; i++) {
+        for (size_t i = 0; i < nPlayers; i++) {
             Cycle c({(float)cos(curAngle), (float)sin(curAngle)}, curAngle);
             players.push_back({c, (int)i, NAMES[i], P_COLORS[i], T_COLORS[i]});
             curAngle += anglePerPlayer;
@@ -389,11 +428,10 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
     glfwGetFramebufferSize(win, &w, &h);
 
     p.use();
-    mat4 mdl  = mathfu::mat4::Identity();
+    mat4 mdl = mathfu::mat4::Identity();
     glUniformMatrix4fv(p.getUniform("model"), 1, false, &mdl[0]);
 
-    mat4 view = mathfu::mat4::LookAt(mathfu::vec3(0.0), mathfu::vec3(0.0, 0.0, 1.0),
-                                     mathfu::vec3(0.0, 1.0, 0.0), 1.0);
+    mat4 view = mathfu::mat4::LookAt(mathfu::vec3(0.0), mathfu::vec3(0.0, 0.0, 1.0), mathfu::vec3(0.0, 1.0, 0.0), 1.0);
 
     windowState->gui.active = true;
 
@@ -401,52 +439,54 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
     double timeSinceLastFrame = 0.0;
     double time = glfwGetTime();
     bool first_frame = true;
-    while(!glfwWindowShouldClose(win)) {
+    while (!glfwWindowShouldClose(win)) {
         windowState->keys.step();
         if (windowState->gui.active) {
-          windowState->gui.startInput();
+            windowState->gui.startInput();
         }
         glfwPollEvents();
         if (windowState->gui.active) {
-          glfwUpdateNkMouse(win, &windowState->gui.ctx);
-          windowState->gui.endInput();
+            glfwUpdateNkMouse(win, &windowState->gui.ctx);
+            windowState->gui.endInput();
         }
 
         double curTime = glfwGetTime();
-        if(gs.running) {
-                timeSinceLastFrame += curTime - time;
+        if (gs.running) {
+            timeSinceLastFrame += curTime - time;
         }
         time = curTime;
 
         glfwGetFramebufferSize(win, &w, &h);
 
-        if(windowState->keys.isPressed(GLFW_KEY_ESCAPE)) { break; }
-        if(gs.rbw.latest()->players().size() == 1) {
+        if (windowState->keys.isPressed(GLFW_KEY_ESCAPE)) {
+            break;
+        }
+        if (gs.rbw.latest()->players().size() == 1) {
             std::cout << "The winner is: " << gs.rbw.latest()->players()[0].name << std::endl;
             gs.running = false;
             break;
-        } else if(gs.rbw.latest()->players().size() == 0) {
+        } else if (gs.rbw.latest()->players().size() == 0) {
             std::cout << "Draw" << std::endl;
             gs.running = false;
             break;
         }
 
-        if(windowState->keys.isPosEdge(GLFW_KEY_P)) {
+        if (windowState->keys.isPosEdge(GLFW_KEY_P)) {
             gs.running = !gs.running;
             first_frame = false;
         }
 
-        if(windowState->keys.isPosEdge(GLFW_KEY_V)) {
+        if (windowState->keys.isPosEdge(GLFW_KEY_V)) {
             gs.rbw.rollback(30);
             std::cout << "r-r-rollback" << std::endl;
         }
 
         // Update game
-        if(timeSinceLastFrame >= 0.5 * kTimePerFrame) {
-            for(auto i = 0u; i < nPlayers; i++) {
+        if (timeSinceLastFrame >= 0.5 * kTimePerFrame) {
+            for (auto i = 0u; i < nPlayers; i++) {
                 playerInputs[i].second = gs.inputs[i]();
             }
-            while(timeSinceLastFrame >= 0.5 * kTimePerFrame) {
+            while (timeSinceLastFrame >= 0.5 * kTimePerFrame) {
                 timeSinceLastFrame -= kTimePerFrame;
                 gs.rbw.advance(playerInputs);
                 gs.replay.push_back(playerInputs);
@@ -455,36 +495,37 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
 
         // Update UI
         if (windowState->gui.active) {
-          auto* ctx = &windowState->gui.ctx;
+            auto* ctx = &windowState->gui.ctx;
 
-          auto layout = [&](auto f) {
-              nk_layout_space_begin(ctx, NK_DYNAMIC, 0, 1);
-              //std::cout << nk_layout_space_bounds(ctx).h << std::endl;
-              nk_layout_space_push(ctx, nk_rect(0.25, 0.1, 0.5, 0.8));
-              f();
-              nk_layout_space_end(ctx);
-          };
-          if (nk_begin(ctx, "main window", {0, 0, (float)w, (float)h}, 0)) {
-              // h = 2*vertical pad + 3*min_row_height
-              // (h - 3*min_row_height)/2 = vertical_pad
-              auto bounds = ctx->current->layout->bounds;
-              int vertical_pad = (bounds.h - (2 * (ctx->current->layout->row.min_height + ctx->style.window.spacing.y))) / 2;
-              nk_layout_space_begin(ctx, NK_DYNAMIC, vertical_pad, 1);
-              nk_layout_space_end(ctx);
+            auto layout = [&](auto f) {
+                nk_layout_space_begin(ctx, NK_DYNAMIC, 0, 1);
+                // std::cout << nk_layout_space_bounds(ctx).h << std::endl;
+                nk_layout_space_push(ctx, nk_rect(0.25, 0.1, 0.5, 0.8));
+                f();
+                nk_layout_space_end(ctx);
+            };
+            if (nk_begin(ctx, "main window", {0, 0, (float)w, (float)h}, 0)) {
+                // h = 2*vertical pad + 3*min_row_height
+                // (h - 3*min_row_height)/2 = vertical_pad
+                auto bounds = ctx->current->layout->bounds;
+                int vertical_pad =
+                    (bounds.h - (2 * (ctx->current->layout->row.min_height + ctx->style.window.spacing.y))) / 2;
+                nk_layout_space_begin(ctx, NK_DYNAMIC, vertical_pad, 1);
+                nk_layout_space_end(ctx);
 
-              layout([&](){
-                  if(nk_button_label(ctx, first_frame ? "Start" : "Resume")) {
-                      gs.running = !gs.running;
-                      first_frame = false;
-                  }
-              });
-              layout([&](){
-                  if(nk_button_label(ctx, "Exit")) {
-                      glfwSetWindowShouldClose(win, true);
-                  }
-              });
-          }
-          nk_end(ctx);
+                layout([&]() {
+                    if (nk_button_label(ctx, first_frame ? "Start" : "Resume")) {
+                        gs.running = !gs.running;
+                        first_frame = false;
+                    }
+                });
+                layout([&]() {
+                    if (nk_button_label(ctx, "Exit")) {
+                        glfwSetWindowShouldClose(win, true);
+                    }
+                });
+            }
+            nk_end(ctx);
         }
 
         glViewport(0, 0, w, h);
@@ -499,7 +540,7 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
 
         // Render UI
         if (windowState->gui.active) {
-          windowState->gui.render(win);
+            windowState->gui.render(win);
         }
         windowState->gui.active = !gs.running;
 
@@ -507,7 +548,7 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
     }
 
     bool rematch = false;
-    while(!glfwWindowShouldClose(win) && !rematch) {
+    while (!glfwWindowShouldClose(win) && !rematch) {
         windowState->gui.active = true;
         windowState->keys.step();
         windowState->gui.startInput();
@@ -515,45 +556,48 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
         glfwUpdateNkMouse(win, &windowState->gui.ctx);
         windowState->gui.endInput();
 
-        if (windowState->keys.isPosEdge(GLFW_KEY_ESCAPE)) { break; }
+        if (windowState->keys.isPosEdge(GLFW_KEY_ESCAPE)) {
+            break;
+        }
         bool watch_replay = windowState->keys.isPosEdge(GLFW_KEY_Q);
         rematch = windowState->keys.isPressed(GLFW_KEY_R);
 
         // Update UI
         {
-          auto* ctx = &windowState->gui.ctx;
+            auto* ctx = &windowState->gui.ctx;
 
-          auto layout = [&](auto f) {
-              nk_layout_space_begin(ctx, NK_DYNAMIC, 0, 1);
-              nk_layout_space_push(ctx, nk_rect(0.25, 0.1, 0.5, 0.8));
-              f();
-              nk_layout_space_end(ctx);
-          };
-          if (nk_begin(ctx, "main window", {0, 0, (float)w, (float)h}, 0)) {
-              // h = 2*vertical pad + 3*min_row_height
-              // (h - 3*min_row_height)/2 = vertical_pad
-              auto bounds = ctx->current->layout->bounds;
-              int vertical_pad = (bounds.h - (3 * (ctx->current->layout->row.min_height + ctx->style.window.spacing.y))) / 2;
-              nk_layout_space_begin(ctx, NK_DYNAMIC, vertical_pad, 1);
-              nk_layout_space_end(ctx);
+            auto layout = [&](auto f) {
+                nk_layout_space_begin(ctx, NK_DYNAMIC, 0, 1);
+                nk_layout_space_push(ctx, nk_rect(0.25, 0.1, 0.5, 0.8));
+                f();
+                nk_layout_space_end(ctx);
+            };
+            if (nk_begin(ctx, "main window", {0, 0, (float)w, (float)h}, 0)) {
+                // h = 2*vertical pad + 3*min_row_height
+                // (h - 3*min_row_height)/2 = vertical_pad
+                auto bounds = ctx->current->layout->bounds;
+                int vertical_pad =
+                    (bounds.h - (3 * (ctx->current->layout->row.min_height + ctx->style.window.spacing.y))) / 2;
+                nk_layout_space_begin(ctx, NK_DYNAMIC, vertical_pad, 1);
+                nk_layout_space_end(ctx);
 
-              layout([&](){
-                  if(nk_button_label(ctx, "Rematch")) {
-                      rematch = true;
-                  }
-              });
-              layout([&](){
-                  if(nk_button_label(ctx, "Watch Replay")) {
-                    watch_replay = true;
-                  }
-              });
-              layout([&](){
-                  if(nk_button_label(ctx, "Exit")) {
-                      glfwSetWindowShouldClose(win, true);
-                  }
-              });
-          }
-          nk_end(ctx);
+                layout([&]() {
+                    if (nk_button_label(ctx, "Rematch")) {
+                        rematch = true;
+                    }
+                });
+                layout([&]() {
+                    if (nk_button_label(ctx, "Watch Replay")) {
+                        watch_replay = true;
+                    }
+                });
+                layout([&]() {
+                    if (nk_button_label(ctx, "Exit")) {
+                        glfwSetWindowShouldClose(win, true);
+                    }
+                });
+            }
+            nk_end(ctx);
         }
 
         // Render
@@ -568,13 +612,12 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
 
         windowState->wr.render(*gs.rbw.latest());
 
-
         // Render UI
         windowState->gui.render(win);
 
         glfwSwapBuffers(win);
 
-        if(watch_replay) {
+        if (watch_replay) {
             ReplayState rs;
             rs.replayInputs = gs.replay;
             rs.world = gs.initial;
@@ -591,14 +634,14 @@ int main(int argc, char** argv) {
 
     int width = 600, height = 600;
 
-    if(argc >= 3) {
+    if (argc >= 3) {
         try {
             int w = stoi(argv[1]);
             int h = stoi(argv[2]);
 
-            width  = w;
+            width = w;
             height = h;
-        } catch(...) {
+        } catch (...) {
             cerr << "Could not parse dimensions from first 2 command line args" << endl;
         }
     }
@@ -613,14 +656,14 @@ int main(int argc, char** argv) {
     {
         Shader vs(GL_VERTEX_SHADER);
         vs.source(vshaderSrc);
-        if(!vs.compile()) {
+        if (!vs.compile()) {
             cerr << "Could not compile vertex shader\n\n" << vs.infoLog() << endl;
             return -1;
         }
 
         Shader fs(GL_FRAGMENT_SHADER);
         fs.source(fshaderSrc);
-        if(!fs.compile()) {
+        if (!fs.compile()) {
             cerr << "Could not compile fragment shader\n\n" << fs.infoLog() << endl;
             return -1;
         }
@@ -630,7 +673,7 @@ int main(int argc, char** argv) {
         p.setFragmentShader(fs);
         p.bindAttrib(0, "pos");
         p.bindAttrib(1, "color");
-        if(!p.link()) {
+        if (!p.link()) {
             cerr << "Could not link program\n\n" << p.infoLog() << endl;
             return -1;
         }
@@ -641,8 +684,9 @@ int main(int argc, char** argv) {
         glfwSetKeyCallback(win, glfwKeyCallback);
 
         try {
-            while(mainloop(win, p, 2));
-        } catch(exception& ex) {
+            while (mainloop(win, p, 2))
+                ;
+        } catch (exception& ex) {
             cerr << ex.what() << endl;
         }
     }

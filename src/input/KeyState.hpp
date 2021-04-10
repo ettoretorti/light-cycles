@@ -5,7 +5,7 @@
 namespace input {
 
 class KeyState {
-public:
+   public:
     KeyState();
 
     bool isPressed(int key) const;
@@ -14,10 +14,11 @@ public:
 
     void updateState(int key, bool pressed);
     void step();
-private:
+
+   private:
     std::unordered_set<int> _pressed;
     std::unordered_set<int> _posEdge;
     std::unordered_set<int> _negEdge;
 };
 
-} // namespace input
+}  // namespace input

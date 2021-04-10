@@ -4,13 +4,13 @@ namespace util {
 
 template <typename T, int N>
 class CircularBuffer final {
-public:
-    CircularBuffer(): _buf(),_head(0), _size(0) {}
+   public:
+    CircularBuffer() : _buf(), _head(0), _size(0) {}
     ~CircularBuffer() {}
     T* head() { return _size > 0 ? &_buf[_head] : nullptr; }
     T* tail() { return _size > 0 ? &_buf[(_head + _size - 1) % N] : nullptr; }
     T* add() {
-        if(_size < N) {
+        if (_size < N) {
             _size++;
             return tail();
         } else {
@@ -20,20 +20,18 @@ public:
         }
     }
     bool remove() {
-        if(_size > 0) {
+        if (_size > 0) {
             _size--;
             return true;
         }
         return false;
     }
-    int size() {
-        return _size;
-    }
+    int size() { return _size; }
 
-private:
+   private:
     T _buf[N];
     int _head;
     int _size;
 };
 
-}
+}  // namespace util

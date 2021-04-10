@@ -6,17 +6,11 @@ namespace input {
 
 KeyState::KeyState() : _pressed(), _posEdge(), _negEdge() {}
 
-bool KeyState::isPressed(int key) const {
-    return _pressed.count(key) > 0;
-}
+bool KeyState::isPressed(int key) const { return _pressed.count(key) > 0; }
 
-bool KeyState::isPosEdge(int key) const {
-    return _posEdge.count(key) > 0;
-}
+bool KeyState::isPosEdge(int key) const { return _posEdge.count(key) > 0; }
 
-bool KeyState::isNegEdge(int key) const {
-    return _negEdge.count(key) > 0;
-}
+bool KeyState::isNegEdge(int key) const { return _negEdge.count(key) > 0; }
 
 void KeyState::updateState(int key, bool pressed) {
     bool prev = isPressed(key);
@@ -34,4 +28,4 @@ void KeyState::step() {
     _negEdge.clear();
 }
 
-} // namespace input
+}  // namespace input

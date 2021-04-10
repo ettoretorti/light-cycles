@@ -5,15 +5,12 @@
 
 #include <cmath>
 
-
 namespace lcycle {
 
-Cycle::Cycle(const mathfu::vec2& pos, double orientation)
-    : _pos(pos), _orientation(orientation)
-{}
+Cycle::Cycle(const mathfu::vec2& pos, double orientation) : _pos(pos), _orientation(orientation) {}
 
 void Cycle::runFor(double secs) {
-    _pos =  _pos + (float)(secs * CYCLE_SPEED) * mathfu::vec2(cos(_orientation), sin(_orientation));
+    _pos = _pos + (float)(secs * CYCLE_SPEED) * mathfu::vec2(cos(_orientation), sin(_orientation));
 }
 
 void Cycle::rotate(double dCC) {
@@ -22,11 +19,11 @@ void Cycle::rotate(double dCC) {
 }
 
 Line Cycle::toLine() const {
-	using namespace mathfu;
+    using namespace mathfu;
 
-	vec2 dir = vec2(cos(_orientation), sin(_orientation));
+    vec2 dir = vec2(cos(_orientation), sin(_orientation));
 
-	return Line(_pos - (float)(CYCLE_LENGTH/2.0) * dir, _pos + (float)(CYCLE_LENGTH/2.0) * dir);
+    return Line(_pos - (float)(CYCLE_LENGTH / 2.0) * dir, _pos + (float)(CYCLE_LENGTH / 2.0) * dir);
 }
 
-}
+}  // namespace lcycle

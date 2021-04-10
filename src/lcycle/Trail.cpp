@@ -1,8 +1,8 @@
 #include "Trail.hpp"
-#include "Line.hpp"
-#include <vector>
-#include <utility>
 #include <mathfu/glsl_mappings.h>
+#include <utility>
+#include <vector>
+#include "Line.hpp"
 
 namespace lcycle {
 
@@ -22,32 +22,18 @@ Trail& Trail::operator=(Trail&& other) {
     return *this;
 }
 
-size_t Trail::size() const {
-    return _trail.size();
-}
+size_t Trail::size() const { return _trail.size(); }
 
-Line& Trail::operator[](size_t idx) {
-    return _trail[idx];
-}
+Line& Trail::operator[](size_t idx) { return _trail[idx]; }
 
-const Line& Trail::operator[](size_t idx) const {
-    return _trail[idx];
-}
+const Line& Trail::operator[](size_t idx) const { return _trail[idx]; }
 
-const std::vector<Line>& Trail::data() const {
-    return _trail;
-}
+const std::vector<Line>& Trail::data() const { return _trail; }
 
-const mathfu::vec4& Trail::color() const {
-    return _color;
-}
+const mathfu::vec4& Trail::color() const { return _color; }
 
-mathfu::vec4& Trail::color() {
-    return _color;
-}
+mathfu::vec4& Trail::color() { return _color; }
 
-void Trail::add(const Line& line) {
-    _trail.push_back(line);
-}
+void Trail::add(const Line& line) { _trail.push_back(line); }
 
-}
+}  // namespace lcycle
