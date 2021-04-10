@@ -26,31 +26,33 @@
 #include "gui/GuiState.hpp"
 #include "gui/nuklear.h"
 
-constexpr char vshaderSrc[] =
-    "#version 330\n"
-    ""
-    "uniform mat4 model;\n"
-    "uniform mat4 viewProjection;\n"
-    ""
-    "in vec4 pos;\n"
-    "in vec4 color;\n"
-    ""
-    "out vec4 fColor;\n"
-    ""
-    "void main() {\n"
-    "  gl_Position = viewProjection * model * pos;\n"
-    "  fColor = color;\n"
-    "}\n";
+constexpr char vshaderSrc[] = R"glsl(
+    #version 330
+    
+    uniform mat4 model;
+    uniform mat4 viewProjection;
+    
+    in vec4 pos;
+    in vec4 color;
+    
+    out vec4 fColor;
+    
+    void main() {
+      gl_Position = viewProjection * model * pos;
+      fColor = color;
+    }
+)glsl";
 
-constexpr char fshaderSrc[] =
-    "#version 330\n"
-    ""
-    "in vec4 fColor;\n"
-    "out vec4 color;\n"
-    ""
-    "void main() {\n"
-    "  color = fColor;\n"
-    "}\n";
+constexpr char fshaderSrc[] = R"glsl(
+    #version 330
+    
+    in vec4 fColor;
+    out vec4 color;
+    
+    void main() {
+      color = fColor;
+    }
+)glsl";
 
 constexpr double kTimePerFrame = 1.0 / 60.0;
 
