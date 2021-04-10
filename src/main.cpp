@@ -473,7 +473,6 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
 
         if (windowState->keys.isPosEdge(GLFW_KEY_P)) {
             gs.running = !gs.running;
-            first_frame = false;
         }
 
         if (windowState->keys.isPosEdge(GLFW_KEY_V)) {
@@ -490,6 +489,7 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
                 timeSinceLastFrame -= kTimePerFrame;
                 gs.rbw.advance(playerInputs);
                 gs.replay.push_back(playerInputs);
+                first_frame = false;
             }
         }
 
@@ -516,7 +516,6 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
                 layout([&]() {
                     if (nk_button_label(ctx, first_frame ? "Start" : "Resume")) {
                         gs.running = !gs.running;
-                        first_frame = false;
                     }
                 });
                 layout([&]() {
