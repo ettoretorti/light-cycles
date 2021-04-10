@@ -21,6 +21,9 @@
 
 #include "gfx/WorldRenderer.hpp"
 
+#include "gui/nuklear.h"
+#include "gui/GuiState.hpp"
+
 constexpr char vshaderSrc[] =
     "#version 330\n"
     ""
@@ -47,6 +50,7 @@ constexpr char fshaderSrc[] =
     "  color = fColor;\n"
     "}\n";
 
+constexpr double kTimePerFrame = 1.0 / 60.0;
 
 void glfw_error(int error, const char* msg) {
     std::cerr << "GLFW error with code: " << error << std::endl;
@@ -95,18 +99,46 @@ void APIENTRY gl_error(GLenum src, GLenum type, GLuint id, GLenum severity, GLsi
 #endif
 
 struct WindowState {
-        input::KeyState keys;
+    input::KeyState keys;
+    gui::GuiState gui;
+    gfx::WorldRenderer wr;
 };
+
+void glfwUpdateNkMouse(GLFWwindow* win, nk_context* ctx) {
+    double x, y;
+    glfwGetCursorPos(win, &x, &y);
+    nk_input_motion(ctx, (int)x, (int)y);
+    nk_input_button(ctx, NK_BUTTON_LEFT, (int)x, (int)y, glfwGetMouseButton(win, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
+    nk_input_button(ctx, NK_BUTTON_MIDDLE, (int)x, (int)y, glfwGetMouseButton(win, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS);
+    nk_input_button(ctx, NK_BUTTON_RIGHT, (int)x, (int)y, glfwGetMouseButton(win, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS);
+}
+
+nk_keys glfwKeyToNkKey(int key) {
+    switch(key) {
+        case GLFW_KEY_LEFT_SHIFT: case GLFW_KEY_RIGHT_SHIFT: return NK_KEY_SHIFT;
+        case GLFW_KEY_LEFT_CONTROL: case GLFW_KEY_RIGHT_CONTROL: return NK_KEY_CTRL;
+        case GLFW_KEY_DELETE: return NK_KEY_DEL;
+        case GLFW_KEY_ENTER: return NK_KEY_ENTER;
+        case GLFW_KEY_TAB: return NK_KEY_TAB;
+        case GLFW_KEY_BACKSPACE: return NK_KEY_BACKSPACE;
+        case GLFW_KEY_UP: return NK_KEY_UP;
+        case GLFW_KEY_DOWN: return NK_KEY_DOWN;
+        case GLFW_KEY_LEFT: return NK_KEY_LEFT;
+        case GLFW_KEY_RIGHT: return NK_KEY_RIGHT;
+        default: return NK_KEY_NONE;
+    }
+}
 
 void glfwKeyCallback(GLFWwindow* win, int key, int scancode, int action, int mods) {
     (void) scancode; (void) mods;
     if (key == GLFW_KEY_UNKNOWN) return;
 
     auto* winState = static_cast<WindowState*>(glfwGetWindowUserPointer(win));
-    if (action == GLFW_PRESS) {
-            winState->keys.updateState(key, true);
-    } else if (action == GLFW_RELEASE) {
-            winState->keys.updateState(key, false);
+    const bool pressed = (action == GLFW_PRESS);
+    winState->keys.updateState(key, pressed);
+    const nk_keys nkKey = glfwKeyToNkKey(key);
+    if (winState->gui.active && nkKey != NK_KEY_NONE) {
+        nk_input_key(&winState->gui.ctx, nkKey, pressed);
     }
 }
 
@@ -189,6 +221,104 @@ mathfu::mat4 projection(int winWidth, int winHeight, double worldSize) {
     }
 }
 
+struct GameState {
+    lcycle::World initial;
+    lcycle::RollbackWorld rbw;
+    std::vector<std::function<lcycle::CycleInput()>> inputs;
+    std::vector<lcycle::World::PlayerInputs> replay;
+    bool running;
+};
+
+struct ReplayState {
+    lcycle::World world;
+    std::vector<lcycle::World::PlayerInputs> replayInputs;
+    float replaySpeed = 1.0;
+    int replayFrame = 0;
+    bool running = false;
+};
+
+void replay(GLFWwindow* win, gl::Program& p, ReplayState s) {
+    using namespace mathfu;
+
+    auto* ws = static_cast<WindowState*>(glfwGetWindowUserPointer(win));
+
+    int w, h;
+    glfwGetFramebufferSize(win, &w, &h);
+
+    double timeSinceLastFrame = 0.0;
+    double time = glfwGetTime();
+    ws->gui.active = true;
+    s.running = false;
+    s.replayFrame = 0;
+    s.replaySpeed = 1.0;
+
+
+    p.use();
+    mat4 mdl  = mathfu::mat4::Identity();
+    glUniformMatrix4fv(p.getUniform("model"), 1, false, &mdl[0]);
+
+    mat4 view = mathfu::mat4::LookAt(mathfu::vec3(0.0), mathfu::vec3(0.0, 0.0, 1.0),
+                                     mathfu::vec3(0.0, 1.0, 0.0), 1.0);
+    bool exit = false;
+    while (!exit && !glfwWindowShouldClose(win)) {
+        ws->keys.step();
+        if (ws->gui.active) {
+          ws->gui.startInput();
+        }
+        glfwPollEvents();
+        if (ws->gui.active) {
+          glfwUpdateNkMouse(win, &ws->gui.ctx);
+          ws->gui.endInput();
+        }
+
+        double curTime = glfwGetTime();
+        if(s.running) {
+            timeSinceLastFrame += s.replaySpeed * (curTime - time);
+        }
+        time = curTime;
+
+        glfwGetFramebufferSize(win, &w, &h);
+
+        if(ws->keys.isPressed(GLFW_KEY_ESCAPE)) {
+            exit = true;
+        }
+        if(ws->keys.isPosEdge(GLFW_KEY_P)) {
+            s.running = !s.running;
+        }
+
+        // Update game
+        if(timeSinceLastFrame >= 0.5 * kTimePerFrame) {
+            while(timeSinceLastFrame >= 0.5 * kTimePerFrame && s.replayFrame < s.replayInputs.size()) {
+                timeSinceLastFrame -= kTimePerFrame;
+                s.world.runFor(kTimePerFrame, s.replayInputs[s.replayFrame]);
+                s.replayFrame++;
+            }
+        }
+
+        // Update UI
+        if (ws->gui.active) {
+          auto* ctx = &ws->gui.ctx;
+        }
+
+        glViewport(0, 0, w, h);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        // Render game
+        p.use();
+        mat4 proj = projection(w, h, s.world.size());
+        glUniformMatrix4fv(p.getUniform("viewProjection"), 1, false, &(proj * view)[0]);
+
+        ws->wr.render(s.world);
+
+        // Render UI
+        if (ws->gui.active) {
+          ws->gui.render(win);
+        }
+        ws->gui.active = !s.running;
+        glfwSwapBuffers(win);
+    }
+}
+
 // Returns true if the players want a rematch
 bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
     using namespace lcycle;
@@ -229,121 +359,227 @@ bool mainloop(GLFWwindow* win, gl::Program& p, size_t nPlayers) {
     }
 
     auto* windowState = static_cast<WindowState*>(glfwGetWindowUserPointer(win));
+    GameState gs;
+    for(auto i = 0u; i < nPlayers; i++) {
+        gs.inputs.push_back(INPUTS[i]);
+    }
 
-    std::vector<Player> players;
-    players.reserve(nPlayers);
     std::vector<std::pair<int, CycleInput>> playerInputs;
     playerInputs.reserve(nPlayers);
 
-    const double anglePerPlayer = 2*3.14159 / nPlayers;
-    double curAngle = 0.0;
-    for(size_t i = 0; i < nPlayers; i++) {
-        Cycle c({(float)cos(curAngle), (float)sin(curAngle)}, curAngle);
-        players.push_back({c, (int)i, NAMES[i], P_COLORS[i], T_COLORS[i]});
-        curAngle += anglePerPlayer;
-        playerInputs.push_back(std::make_pair<int, CycleInput>(i, {}));
-    }
-
     const double WORLD_SIZE = 50.0;
-    WorldRenderer wr;
-    RollbackWorld rbw(World(WORLD_SIZE, 0.14, players));
+    {
+        std::vector<Player> players;
+        players.reserve(nPlayers);
+
+        const double anglePerPlayer = 2*3.14159 / nPlayers;
+        double curAngle = 0.0;
+        for(size_t i = 0; i < nPlayers; i++) {
+            Cycle c({(float)cos(curAngle), (float)sin(curAngle)}, curAngle);
+            players.push_back({c, (int)i, NAMES[i], P_COLORS[i], T_COLORS[i]});
+            curAngle += anglePerPlayer;
+            playerInputs.push_back(std::make_pair<int, CycleInput>(i, {}));
+        }
+
+        gs.initial = World(WORLD_SIZE, 0.14, players);
+        gs.rbw = RollbackWorld(gs.initial);
+    }
 
     int w, h;
     glfwGetFramebufferSize(win, &w, &h);
-    glViewport(0, 0, w, h);
 
+    p.use();
     mat4 mdl  = mathfu::mat4::Identity();
     glUniformMatrix4fv(p.getUniform("model"), 1, false, &mdl[0]);
 
     mat4 view = mathfu::mat4::LookAt(mathfu::vec3(0.0), mathfu::vec3(0.0, 0.0, 1.0),
                                      mathfu::vec3(0.0, 1.0, 0.0), 1.0);
-    mat4 proj = projection(w, h, WORLD_SIZE);
 
-    glUniformMatrix4fv(p.getUniform("viewProjection"), 1, false, &(proj * view)[0]);
+    windowState->gui.active = true;
 
-
-    bool running  = false;
-    constexpr double timePerFrame = 1.0 / 60.0;
+    gs.running = false;
     double timeSinceLastFrame = 0.0;
     double time = glfwGetTime();
+    bool first_frame = true;
     while(!glfwWindowShouldClose(win)) {
+        windowState->keys.step();
+        if (windowState->gui.active) {
+          windowState->gui.startInput();
+        }
         glfwPollEvents();
+        if (windowState->gui.active) {
+          glfwUpdateNkMouse(win, &windowState->gui.ctx);
+          windowState->gui.endInput();
+        }
+
         double curTime = glfwGetTime();
+        if(gs.running) {
+                timeSinceLastFrame += curTime - time;
+        }
+        time = curTime;
+
+        glfwGetFramebufferSize(win, &w, &h);
 
         if(windowState->keys.isPressed(GLFW_KEY_ESCAPE)) { break; }
-        if(rbw.latest()->players().size() == 1) {
-            std::cout << "The winner is: " << rbw.latest()->players()[0].name << std::endl;
-            running = false;
+        if(gs.rbw.latest()->players().size() == 1) {
+            std::cout << "The winner is: " << gs.rbw.latest()->players()[0].name << std::endl;
+            gs.running = false;
             break;
-        } else if(rbw.latest()->players().size() == 0) {
+        } else if(gs.rbw.latest()->players().size() == 0) {
             std::cout << "Draw" << std::endl;
-            running = false;
+            gs.running = false;
             break;
         }
 
         if(windowState->keys.isPosEdge(GLFW_KEY_P)) {
-            running = !running;
+            gs.running = !gs.running;
+            first_frame = false;
         }
 
         if(windowState->keys.isPosEdge(GLFW_KEY_V)) {
-            rbw.rollback(30);
+            gs.rbw.rollback(30);
             std::cout << "r-r-rollback" << std::endl;
         }
 
-
-        if(running) {
-            timeSinceLastFrame += curTime - time;
-            if(timeSinceLastFrame >= 0.5 * timePerFrame) {
-                for(auto i = 0u; i < nPlayers; i++) {
-                    playerInputs[i].second = INPUTS[i]();
-                }
-                while(timeSinceLastFrame >= 0.5 * timePerFrame) {
-                    timeSinceLastFrame -= timePerFrame;
-                    rbw.advance(playerInputs);
-                }
+        // Update game
+        if(timeSinceLastFrame >= 0.5 * kTimePerFrame) {
+            for(auto i = 0u; i < nPlayers; i++) {
+                playerInputs[i].second = gs.inputs[i]();
             }
-            windowState->keys.step();
-        } else {
-            windowState->keys.step();
-            glfwWaitEvents();
-            curTime = glfwGetTime();
-        }
-        time = curTime;
-
-        int nW, nH;
-        glfwGetFramebufferSize(win, &nW, &nH);
-        if(nW != w || nH != h) {
-            glViewport(0, 0, nW, nH);
-            mat4 proj = projection(nW, nH, WORLD_SIZE);
-            glUniformMatrix4fv(p.getUniform("viewProjection"), 1, false, &(proj * view)[0]);
-
-            w = nW;
-            h = nH;
+            while(timeSinceLastFrame >= 0.5 * kTimePerFrame) {
+                timeSinceLastFrame -= kTimePerFrame;
+                gs.rbw.advance(playerInputs);
+                gs.replay.push_back(playerInputs);
+            }
         }
 
+        // Update UI
+        if (windowState->gui.active) {
+          auto* ctx = &windowState->gui.ctx;
+
+          auto layout = [&](auto f) {
+              nk_layout_space_begin(ctx, NK_DYNAMIC, 0, 1);
+              //std::cout << nk_layout_space_bounds(ctx).h << std::endl;
+              nk_layout_space_push(ctx, nk_rect(0.25, 0.1, 0.5, 0.8));
+              f();
+              nk_layout_space_end(ctx);
+          };
+          if (nk_begin(ctx, "main window", {0, 0, (float)w, (float)h}, 0)) {
+              // h = 2*vertical pad + 3*min_row_height
+              // (h - 3*min_row_height)/2 = vertical_pad
+              auto bounds = ctx->current->layout->bounds;
+              int vertical_pad = (bounds.h - (2 * (ctx->current->layout->row.min_height + ctx->style.window.spacing.y))) / 2;
+              nk_layout_space_begin(ctx, NK_DYNAMIC, vertical_pad, 1);
+              nk_layout_space_end(ctx);
+
+              layout([&](){
+                  if(nk_button_label(ctx, first_frame ? "Start" : "Resume")) {
+                      gs.running = !gs.running;
+                      first_frame = false;
+                  }
+              });
+              layout([&](){
+                  if(nk_button_label(ctx, "Exit")) {
+                      glfwSetWindowShouldClose(win, true);
+                  }
+              });
+          }
+          nk_end(ctx);
+        }
+
+        glViewport(0, 0, w, h);
         glClear(GL_COLOR_BUFFER_BIT);
-        wr.render(*rbw.latest());
+
+        // Render game
+        p.use();
+        mat4 proj = projection(w, h, WORLD_SIZE);
+        glUniformMatrix4fv(p.getUniform("viewProjection"), 1, false, &(proj * view)[0]);
+
+        windowState->wr.render(*gs.rbw.latest());
+
+        // Render UI
+        if (windowState->gui.active) {
+          windowState->gui.render(win);
+        }
+        windowState->gui.active = !gs.running;
+
         glfwSwapBuffers(win);
     }
 
     bool rematch = false;
-    while(!glfwWindowShouldClose(win) && !windowState->keys.isPressed(GLFW_KEY_ESCAPE) && !(rematch = windowState->keys.isPressed(GLFW_KEY_R))) {
-        glfwWaitEvents();
+    while(!glfwWindowShouldClose(win) && !rematch) {
+        windowState->gui.active = true;
+        windowState->keys.step();
+        windowState->gui.startInput();
+        glfwPollEvents();
+        glfwUpdateNkMouse(win, &windowState->gui.ctx);
+        windowState->gui.endInput();
 
-        int nW, nH;
-        glfwGetFramebufferSize(win, &nW, &nH);
-        if(nW != w || nH != h) {
-            glViewport(0, 0, nW, nH);
-            mat4 proj = projection(nW, nH, WORLD_SIZE);
-            glUniformMatrix4fv(p.getUniform("viewProjection"), 1, false, &(proj * view)[0]);
+        if (windowState->keys.isPosEdge(GLFW_KEY_ESCAPE)) { break; }
+        bool watch_replay = windowState->keys.isPosEdge(GLFW_KEY_Q);
+        rematch = windowState->keys.isPressed(GLFW_KEY_R);
 
-            w = nW;
-            h = nH;
+        // Update UI
+        {
+          auto* ctx = &windowState->gui.ctx;
+
+          auto layout = [&](auto f) {
+              nk_layout_space_begin(ctx, NK_DYNAMIC, 0, 1);
+              nk_layout_space_push(ctx, nk_rect(0.25, 0.1, 0.5, 0.8));
+              f();
+              nk_layout_space_end(ctx);
+          };
+          if (nk_begin(ctx, "main window", {0, 0, (float)w, (float)h}, 0)) {
+              // h = 2*vertical pad + 3*min_row_height
+              // (h - 3*min_row_height)/2 = vertical_pad
+              auto bounds = ctx->current->layout->bounds;
+              int vertical_pad = (bounds.h - (3 * (ctx->current->layout->row.min_height + ctx->style.window.spacing.y))) / 2;
+              nk_layout_space_begin(ctx, NK_DYNAMIC, vertical_pad, 1);
+              nk_layout_space_end(ctx);
+
+              layout([&](){
+                  if(nk_button_label(ctx, "Rematch")) {
+                      rematch = true;
+                  }
+              });
+              layout([&](){
+                  if(nk_button_label(ctx, "Watch Replay")) {
+                    watch_replay = true;
+                  }
+              });
+              layout([&](){
+                  if(nk_button_label(ctx, "Exit")) {
+                      glfwSetWindowShouldClose(win, true);
+                  }
+              });
+          }
+          nk_end(ctx);
         }
 
+        // Render
+        glfwGetFramebufferSize(win, &w, &h);
+        glViewport(0, 0, w, h);
         glClear(GL_COLOR_BUFFER_BIT);
-        wr.render(*rbw.latest());
+
+        // Render game
+        p.use();
+        mat4 proj = projection(w, h, WORLD_SIZE);
+        glUniformMatrix4fv(p.getUniform("viewProjection"), 1, false, &(proj * view)[0]);
+
+        windowState->wr.render(*gs.rbw.latest());
+
+
+        // Render UI
+        windowState->gui.render(win);
+
         glfwSwapBuffers(win);
+
+        if(watch_replay) {
+            ReplayState rs;
+            rs.replayInputs = gs.replay;
+            rs.world = gs.initial;
+            replay(win, p, rs);
+        }
     }
 
     return rematch;
