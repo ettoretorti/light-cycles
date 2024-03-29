@@ -26,6 +26,9 @@
 #include "gui/GuiState.hpp"
 #include "gui/nuklear.h"
 
+#include "network/PeerConnection.hpp"
+#include "capnp/packet.capnp.h"
+
 constexpr char vshaderSrc[] = R"glsl(
     #version 330
     
